@@ -1,0 +1,16 @@
+// Simple C-slop test application
+// Run with: cslop test.slop
+
+// Import Node modules
+import {format} from "date-fns"
+
+// Routes
+*/ > #json({message: "Hello C-slop!", time: Date.now()})
+
+*/users > @users > #json
+
+*/users/:id > @users[$.id] > #json
+
+*/users + @users!$.body > #json
+
+*/date > #json({date: format(Date.now(), "yyyy-MM-dd")})

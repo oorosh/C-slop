@@ -1,0 +1,32 @@
+// Complete C-slop Example
+// Demonstrates routes, database, imports, and pipelines
+
+import axios from "axios"
+import {format} from "date-fns"
+
+// Root endpoint
+*/ > #json({
+  message: "Welcome to C-slop API",
+  version: "0.1.0",
+  time: format(Date.now(), "yyyy-MM-dd HH:mm:ss")
+})
+
+// Health check
+*/health > #json({status: "healthy", timestamp: Date.now()})
+
+// Users CRUD
+*/users > @users > #json
+
+*/users/:id > @users[$.id] > #json
+
+*/users + @users!$.body > #json
+
+// External API call
+*/github-status > axios.get("https://api.github.com") > #json
+
+// Date utilities
+*/date > #json({
+  formatted: format(Date.now(), "MMMM dd, yyyy"),
+  iso: format(Date.now(), "yyyy-MM-dd'T'HH:mm:ss"),
+  unix: Date.now()
+})

@@ -1,0 +1,8 @@
+// Simplest C-slop app
+*/ > #json({message: "Hello from C-slop!", timestamp: Date.now()})
+
+*/users > @users > #json
+
+*/users/:id > @users[$.id] > #json
+
+*/users + @users!$.body > #json

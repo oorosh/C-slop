@@ -1,0 +1,11 @@
+// C-slop with Node module imports
+import axios from "axios"
+import {format} from "date-fns"
+
+*/ > #json({message: "C-slop with imports!", date: format(Date.now(), "yyyy-MM-dd HH:mm:ss")})
+
+*/github > axios.get("https://api.github.com") > #json
+
+*/users > @users > #json
+
+*/users + @users!$.body > #json

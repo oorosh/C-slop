@@ -1,0 +1,15 @@
+// Complete example with database and Node module imports
+import axios from "axios"
+
+// Simple routes
+*/ > #html(~<h1>Welcome to C-slop!</h1>)
+
+*/api/users > @users > #json
+
+*/api/users/:id > @users[$.id] > #json
+
+*/api/users + @users!$.body > #201
+
+*/api/status > #json({status: "ok", timestamp: Date.now()})
+
+*/api/external > axios.get("https://api.github.com") > #json
