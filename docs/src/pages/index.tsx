@@ -16,7 +16,7 @@ const symbols = [
   { char: '?', name: 'Query' },
   { char: '!', name: 'Mutate' },
   { char: '~', name: 'Template' },
-  { char: '^', name: 'Route' },
+  { char: '*', name: 'Route' },
   { char: '&', name: 'Parallel' },
   { char: '_', name: 'Context' },
 ];
@@ -38,7 +38,7 @@ const features = [
     description: 'First-class database operations. Query, filter, insert, update with single symbols.',
   },
   {
-    icon: '^',
+    icon: '*',
     title: 'Routes as Primitives',
     description: 'HTTP routes are language constructs. Define entire APIs in a few lines.',
   },
@@ -70,9 +70,9 @@ app.post('/users', async (req, res) => {
   res.status(201).json(user);
 });`;
 
-const cslopCode = `^/users/:id > @users[$.id] > #json
+const cslopCode = `*/users/:id > @users[$.id] > #json
 
-^/users + $.body > @users! > #201`;
+*/users + $.body > @users! > #201`;
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
@@ -100,7 +100,7 @@ function HomepageHeader() {
           <div className={styles.heroCodeBlock}>
             <div><span className={styles.codeComment}>// Full REST endpoint in 1 line</span></div>
             <div>
-              <span className={styles.codeSymbol}>^</span>
+              <span className={styles.codeSymbol}>*</span>
               <span className={styles.codeRoute}>/users/:id</span>
               {' '}<span className={styles.codeOperator}>&gt;</span>{' '}
               <span className={styles.codeSymbol}>@</span>

@@ -15,25 +15,25 @@ A full CRUD API for a todo application:
 @:postgres(env(DB_URL))
 
 // Middleware - JWT authentication
-^/api/* > jwt?($.headers.auth) ? {user:_} : #401
+*/api/* > jwt?($.headers.auth) ? {user:_} : #401
 
 // List todos for current user
-^/api/todos > @todos?{userId:$.user.id} > #json
+*/api/todos > @todos?{userId:$.user.id} > #json
 
 // Get single todo
-^/api/todos/:id > @todos[$.id] > #json
+*/api/todos/:id > @todos[$.id] > #json
 
 // Create todo
-^/api/todos + {
+*/api/todos + {
   $.body.title ?? #400("title required")
   {...$.body, userId:$.user.id, ts:now} > @todos! > #201
 }
 
 // Update todo
-^/api/todos/:id ~ $.body > @todos[$.id]! > #json
+*/api/todos/:id ~ $.body > @todos[$.id]! > #json
 
 // Delete todo
-^/api/todos/:id - @todos[$.id]!- > #204
+*/api/todos/:id - @todos[$.id]!- > #204
 ```
 
 **Lines**: 15
@@ -48,7 +48,7 @@ Complete auth system with registration, login, and protected routes:
 
 ```cslop
 // Register new user
-^/auth/register + {
+*/auth/register + {
   // Validate input
   $.body.email ?? #400("email required")
   $.body.pass ?? #400("password required")
@@ -65,7 +65,7 @@ Complete auth system with registration, login, and protected routes:
 }
 
 // Login
-^/auth/login + {
+*/auth/login + {
   u: @users?{email:$.body.email}[0]
   u ?? #401("invalid credentials")
   u.pass == hash($.body.pass)
@@ -75,7 +75,7 @@ Complete auth system with registration, login, and protected routes:
 }
 
 // Protected route
-^/profile > {
+*/profile > {
   jwt?($.headers.auth) ?? #401
   @users[_.id] > #json
 }
@@ -89,17 +89,17 @@ A simple blog with posts, comments, and authors:
 
 ```cslop
 // List all posts with author info
-^/posts > @posts.users[title,body,createdAt,users.name] > #json
+*/posts > @posts.users[title,body,createdAt,users.name] > #json
 
 // Get single post with comments
-^/posts/:id > {
+*/posts/:id > {
   post: @posts[$.id].users
   comments: @comments?{postId:$.id}.users
   {post, comments}
 } > #json
 
 // Create post
-^/posts + {
+*/posts + {
   jwt?($.headers.auth) ?? #401
   {
     ...$.body,
@@ -109,7 +109,7 @@ A simple blog with posts, comments, and authors:
 }
 
 // Add comment
-^/posts/:id/comments + {
+*/posts/:id/comments + {
   jwt?($.headers.auth) ?? #401
   {
     postId: $.id,
@@ -120,7 +120,7 @@ A simple blog with posts, comments, and authors:
 }
 
 // Render blog homepage
-^/ > {
+*/ > {
   posts: @posts.users[:10]
   ~views/blog({posts})
 } > #html
@@ -134,13 +134,13 @@ Shopping cart with products and orders:
 
 ```cslop
 // Get products
-^/products > @products?{active:true} > #json
+*/products > @products?{active:true} > #json
 
 // Get product by ID
-^/products/:id > @products[$.id] >| #404 > #json
+*/products/:id > @products[$.id] >| #404 > #json
 
 // Add to cart
-^/cart + {
+*/cart + {
   jwt?($.headers.auth) ?? #401
   product: @products[$.body.productId]
   {
@@ -152,7 +152,7 @@ Shopping cart with products and orders:
 }
 
 // Get cart
-^/cart > {
+*/cart > {
   jwt?($.headers.auth) ?? #401
   items: @cart?{userId:_.id}.products
   total: items >+ _.price * _.quantity : 0
@@ -160,7 +160,7 @@ Shopping cart with products and orders:
 } > #json
 
 // Checkout
-^/checkout + {
+*/checkout + {
   jwt?($.headers.auth) ?? #401
   cartItems: @cart?{userId:_.id}
   total: cartItems >+ _.price * _.quantity : 0
@@ -183,7 +183,7 @@ Handle file uploads and serve static files:
 
 ```cslop
 // Upload file
-^/upload + {
+*/upload + {
   jwt?($.headers.auth) ?? #401
   $.files.image ?? #400("no file")
 
@@ -202,20 +202,20 @@ Handle file uploads and serve static files:
 }
 
 // Get user's files
-^/files > {
+*/files > {
   jwt?($.headers.auth) ?? #401
   @files?{userId:_.id} > #json
 }
 
 // Download file
-^/files/:id > {
+*/files/:id > {
   file: @files[$.id]
   file ?? #404
   #file(file.path)
 }
 
 // Delete file
-^/files/:id - {
+*/files/:id - {
   jwt?($.headers.auth) ?? #401
   file: @files[$.id]
   file.userId == _.id ?? #403
@@ -232,7 +232,7 @@ Server-sent events for real-time updates:
 
 ```cslop
 // Stream analytics data
-^/analytics/stream > {
+*/analytics/stream > {
   jwt?($.headers.auth) ?? #401
 
   #sse > {
@@ -249,7 +249,7 @@ Server-sent events for real-time updates:
 }
 
 // Get dashboard data
-^/dashboard > {
+*/dashboard > {
   jwt?($.headers.auth) ?? #401
 
   stats: {
@@ -271,7 +271,7 @@ Full-text search with pagination:
 
 ```cslop
 // Search products
-^/search > {
+*/search > {
   q: $.query.q ?? ""
   page: $.query.page ?? 0
   limit: 20
@@ -288,7 +288,7 @@ Full-text search with pagination:
 }
 
 // Browse with filters
-^/products > {
+*/products > {
   filters: {
     category: $.query.category,
     minPrice: $.query.min,
@@ -313,7 +313,7 @@ Process incoming webhooks:
 
 ```cslop
 // Stripe webhook
-^/webhooks/stripe + {
+*/webhooks/stripe + {
   // Verify signature
   sig: $.headers["stripe-signature"]
   verify($.body, sig, env(STRIPE_SECRET)) ?? #401

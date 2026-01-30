@@ -21,7 +21,7 @@ npm install -g cslop
 Create a file `hello.slop`:
 
 ```cslop
-^/ > #html(~<h1>Hello C-slop!</h1>)
+*/ > #html(~<h1>Hello C-slop!</h1>)
 ```
 
 Run it:
@@ -41,9 +41,9 @@ Visit `http://localhost:3000` to see your app!
 @:sqlite("./dev.db")
 
 // Routes
-^/users > @users > #json
-^/users/:id > @users[$.id] > #json
-^/users + @users!$.body > #201
+*/users > @users > #json
+*/users/:id > @users[$.id] > #json
+*/users + @users!$.body > #201
 ```
 
 ### Example 2: Todo API
@@ -51,11 +51,11 @@ Visit `http://localhost:3000` to see your app!
 ```cslop
 @:sqlite("./todos.db")
 
-^/todos > @todos > #json
-^/todos/:id > @todos[$.id] > #json
-^/todos + @todos!{...$.body, done:false, ts:now} > #201
-^/todos/:id ~ @todos[$.id]!$.body > #json
-^/todos/:id - @todos[$.id]!- > #204
+*/todos > @todos > #json
+*/todos/:id > @todos[$.id] > #json
+*/todos + @todos!{...$.body, done:false, ts:now} > #201
+*/todos/:id ~ @todos[$.id]!$.body > #json
+*/todos/:id - @todos[$.id]!- > #204
 ```
 
 ### Example 3: Auth
@@ -63,7 +63,7 @@ Visit `http://localhost:3000` to see your app!
 ```cslop
 @:sqlite("./auth.db")
 
-^/register + {
+*/register + {
   $.body.email ?? #400("email required")
   $.body.pass ?? #400("password required")
   @users?{email:$.body.email}[0] ? #400("exists") : _
@@ -71,14 +71,14 @@ Visit `http://localhost:3000` to see your app!
   {token: jwt(user)} > #json
 }
 
-^/login + {
+*/login + {
   u: @users?{email:$.body.email}[0]
   u ?? #401
   u.pass == hash($.body.pass) ? {token:jwt(u)} : #401
   > #json
 }
 
-^/profile > {
+*/profile > {
   jwt?($.headers.auth) ?? #401
   @users[_.id] > #json
 }
@@ -87,7 +87,7 @@ Visit `http://localhost:3000` to see your app!
 ### Example 4: Template Rendering
 
 ```cslop
-^/ > {
+*/ > {
   users: @users
   ~<html>
     <head>
@@ -106,7 +106,7 @@ Visit `http://localhost:3000` to see your app!
 ### Example 5: Complex Pipeline
 
 ```cslop
-^/analytics > {
+*/analytics > {
   jwt?($.headers.auth) ?? #401
 
   // Fetch data
@@ -143,7 +143,7 @@ Try commands:
 > @users
 > @users?{active:true}
 > @users!{name:"Alice", email:"alice@x.com"}
-> ^/test > #json({hello:"world"})
+> */test > #json({hello:"world"})
 ```
 
 ## CLI Commands
@@ -225,7 +225,7 @@ DEBUG=cslop:* cslop run app.slop
 ### Add Logging
 
 ```cslop
-^/users > {
+*/users > {
   log("Fetching users")
   users: @users
   log("Found", users.count, "users")
@@ -236,7 +236,7 @@ DEBUG=cslop:* cslop run app.slop
 ### Inspect Values
 
 ```cslop
-^/debug > {
+*/debug > {
   data: @users
   inspect(data)  // Pretty-print to console
   data > #json

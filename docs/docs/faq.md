@@ -41,7 +41,7 @@ Yes! C-slop can import and use npm packages:
 ```cslop
 import {format} from "date-fns"
 
-^/date > format(now, "yyyy-MM-dd") > #json
+*/date > format(now, "yyyy-MM-dd") > #json
 ```
 
 ## Installation Issues
@@ -73,7 +73,7 @@ export PATH="$PATH:$(npm bin -g)"
 
 Symbols reduce token count dramatically:
 - `@users` vs `database.table('users')` - 1 token vs 7 tokens
-- `^/api` vs `app.get('/api')` - 2 tokens vs 6 tokens
+- `*/api` vs `app.get('/api')` - 2 tokens vs 6 tokens
 - `$.body` vs `request.body` - 2 tokens vs 3 tokens
 
 This adds up quickly in real applications.
@@ -81,7 +81,7 @@ This adds up quickly in real applications.
 ### How do I learn the symbols?
 
 There are only 10 core symbols:
-- `^` Route
+- `*` Route
 - `@` Database
 - `$` Request
 - `#` Response
@@ -166,10 +166,10 @@ C-slop automatically joins on foreign keys named `{table}Id`:
 Check route definitions:
 
 ```cslop
-// Must start with ^
-^/users > @users > #json  // ✓ Correct
+// Must start with *
+*/users > @users > #json  // ✓ Correct
 
-/users > @users > #json   // ✗ Wrong - missing ^
+/users > @users > #json   // ✗ Wrong - missing *
 ```
 
 ### Routes not matching
@@ -178,12 +178,12 @@ Order matters - more specific routes first:
 
 ```cslop
 // Correct order
-^/users/admin > handleAdmin
-^/users/:id > handleUser
+*/users/admin > handleAdmin
+*/users/:id > handleUser
 
 // Wrong order - :id catches everything
-^/users/:id > handleUser
-^/users/admin > handleAdmin  // Never reached
+*/users/:id > handleUser
+*/users/admin > handleAdmin  // Never reached
 ```
 
 ### POST body is empty
@@ -191,7 +191,7 @@ Order matters - more specific routes first:
 Ensure you're using `$.body`:
 
 ```cslop
-^/users + {
+*/users + {
   data: $.body  // Request body
   @users!data > #201
 }
@@ -205,10 +205,10 @@ Check for null values:
 
 ```cslop
 // May fail if user doesn't exist
-^/users/:id > @users[$.id].name > #json
+*/users/:id > @users[$.id].name > #json
 
 // Better - handle null
-^/users/:id > @users[$.id] >| #404 > #json
+*/users/:id > @users[$.id] >| #404 > #json
 ```
 
 ### "Type error" in pipeline
@@ -271,7 +271,7 @@ Use pagination:
 Stream large responses:
 
 ```cslop
-^/export > #stream > @users >! #write(csv(_))
+*/export > #stream > @users >! #write(csv(_))
 ```
 
 ## Development Tips
@@ -289,7 +289,7 @@ cslop dev app.slop  # Auto-reloads on changes
 Add logging:
 
 ```cslop
-^/users > {
+*/users > {
   log("Fetching users")
   users: @users
   log("Found:", users)
@@ -300,7 +300,7 @@ Add logging:
 Use inspect:
 
 ```cslop
-^/debug > {
+*/debug > {
   data: @users
   inspect(data)  // Pretty-print to console
   data > #json
@@ -347,10 +347,10 @@ Everything is async by default! No `async`/`await` needed:
 
 ```cslop
 // Automatically awaited
-^/users > @users > #json
+*/users > @users > #json
 
 // All these are awaited
-^/data > fetch(url) > parse > @store! > #json
+*/data > fetch(url) > parse > @store! > #json
 ```
 
 ### Type annotations?
@@ -380,7 +380,7 @@ operation >| {
 }
 
 // Early return
-^/api + {
+*/api + {
   $.body.email ?? #400("email required")
   // Continue if valid
 }
@@ -392,13 +392,13 @@ operation >| {
 
 ```cslop
 // Middleware
-^/api/* > {
+*/api/* > {
   jwt?($.headers.auth) ?? #401
   _  // Continue with user in context
 }
 
 // Use in routes
-^/api/profile > @users[_.id] > #json
+*/api/profile > @users[_.id] > #json
 ```
 
 ### Pagination
@@ -409,7 +409,7 @@ paginate: (query, page, size) {
   {items, total:query.count, page, size}
 }
 
-^/users > paginate(@users, $.query.page ?? 0, 20) > #json
+*/users > paginate(@users, $.query.page ?? 0, 20) > #json
 ```
 
 ### Validation
@@ -424,7 +424,7 @@ validate: (data, rules) {
   data
 }
 
-^/users + {
+*/users + {
   validate($.body, {name:{required:true}, email:{required:true}})
   @users!$.body > #201
 }

@@ -29,7 +29,7 @@ C-slop is designed for **machine efficiency** - minimizing tokens while maintain
 | `?` | Query/Filter | `@users?{age>18}` |
 | `!` | Action/Mutation | `@users!{name:"x"}` |
 | `~` | Template/Render | `~view` |
-| `^` | Route definition | `^/path` |
+| `*` | Route definition | `*/path` |
 | `&` | Parallel execution | `a & b` |
 | `_` | Current context/item | `_.name` |
 
@@ -41,16 +41,16 @@ C-slop is designed for **machine efficiency** - minimizing tokens while maintain
 
 ```cslop
 // GET route - fetch user by id
-^/users/:id > @users[$.id] > #json
+*/users/:id > @users[$.id] > #json
 
 // POST route - create user
-^/users + $.body > @users! > #201
+*/users + $.body > @users! > #201
 
 // DELETE route
-^/users/:id - @users[$.id]! > #204
+*/users/:id - @users[$.id]! > #204
 
 // Route with logic
-^/login + {
+*/login + {
   u: @users?{email:$.email}[0]
   u.pass == $.pass ? #jwt(u) : #401
 }
@@ -65,7 +65,7 @@ app.get('/users/:id', async (req, res) => {
 });
 
 // C-slop: 8 tokens
-^/users/:id > @users[$.id] > #json
+*/users/:id > @users[$.id] > #json
 ```
 
 ### Database Operations
@@ -137,7 +137,7 @@ validate: (user) {
 }
 
 // Pipe functions
-^/data > fetch > parse > validate > @store! > #json
+*/data > fetch > parse > validate > @store! > #json
 ```
 
 ### Conditionals
@@ -153,7 +153,7 @@ x ?
   _   : "small"
 
 // Guard clauses
-^/admin > $.role=="admin" ? @data > #json : #403
+*/admin > $.role=="admin" ? @data > #json : #403
 ```
 
 ### Loops & Transforms
@@ -215,13 +215,13 @@ op >| {
 
 ```cslop
 // Before all routes
-^* > auth($) > _
+** > auth($) > _
 
 // Before specific routes
-^/admin/* > isAdmin($) ? _ : #403
+*/admin/* > isAdmin($) ? _ : #403
 
 // After (response transform)
-^/api/* >># {data:_, ts:now}
+*/api/* >># {data:_, ts:now}
 ```
 
 ---
@@ -275,17 +275,17 @@ op >| {
 @:postgres(env(DB_URL))
 
 // Middleware
-^/api/* > jwt?($.headers.auth) ? {user:_} : #401
+*/api/* > jwt?($.headers.auth) ? {user:_} : #401
 
 // Routes
-^/api/todos       > @todos?{userId:$.user.id} > #json
-^/api/todos/:id   > @todos[$.id] > #json
-^/api/todos     + {...$.body, userId:$.user.id} > @todos! > #201
-^/api/todos/:id ~ $.body > @todos[$.id]! > #json
-^/api/todos/:id - @todos[$.id]!- > #204
+*/api/todos       > @todos?{userId:$.user.id} > #json
+*/api/todos/:id   > @todos[$.id] > #json
+*/api/todos     + {...$.body, userId:$.user.id} > @todos! > #201
+*/api/todos/:id ~ $.body > @todos[$.id]! > #json
+*/api/todos/:id - @todos[$.id]!- > #204
 
 // With validation
-^/api/todos + {
+*/api/todos + {
   $.body.title ?? #400("title required")
   {...$.body, userId:$.user.id, ts:now} > @todos! > #201
 }

@@ -8,28 +8,28 @@ Complete syntax reference for the C-slop language.
 
 ## Routes
 
-Routes are first-class language constructs using the `^` symbol.
+Routes are first-class language constructs using the `*` symbol.
 
 ### Basic Routes
 
 ```cslop
 // GET route
-^/users/:id > @users[$.id] > #json
+*/users/:id > @users[$.id] > #json
 
 // POST route
-^/users + $.body > @users! > #201
+*/users + $.body > @users! > #201
 
 // PUT route
-^/users/:id ~ $.body > @users[$.id]! > #json
+*/users/:id ~ $.body > @users[$.id]! > #json
 
 // DELETE route
-^/users/:id - @users[$.id]!- > #204
+*/users/:id - @users[$.id]!- > #204
 ```
 
 ### Routes with Logic
 
 ```cslop
-^/login + {
+*/login + {
   u: @users?{email:$.email}[0]
   u.pass == $.pass ? #jwt(u) : #401
 }
@@ -39,13 +39,13 @@ Routes are first-class language constructs using the `^` symbol.
 
 ```cslop
 // Apply to all routes
-^* > auth($) > _
+** > auth($) > _
 
 // Apply to specific paths
-^/admin/* > isAdmin($) ? _ : #403
+*/admin/* > isAdmin($) ? _ : #403
 
 // Response transform
-^/api/* >># {data:_, ts:now}
+*/api/* >># {data:_, ts:now}
 ```
 
 ## Database Operations
@@ -204,7 +204,7 @@ validate: (user) {
 ### Pipeline Functions
 
 ```cslop
-^/data > fetch > parse > validate > @store! > #json
+*/data > fetch > parse > validate > @store! > #json
 ```
 
 ## Conditionals
@@ -227,7 +227,7 @@ x ?
 ### Guard Clauses
 
 ```cslop
-^/admin > $.role=="admin" ? @data > #json : #403
+*/admin > $.role=="admin" ? @data > #json : #403
 ```
 
 ### Nullish Coalescing

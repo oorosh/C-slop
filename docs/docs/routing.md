@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # Routing
 
-HTTP routing is a first-class feature in C-slop using the `^` symbol.
+HTTP routing is a first-class feature in C-slop using the `*` symbol.
 
 ## Basic Routes
 
@@ -12,26 +12,26 @@ HTTP routing is a first-class feature in C-slop using the `^` symbol.
 
 ```cslop
 // GET (default)
-^/users > @users > #json
+*/users > @users > #json
 
 // POST
-^/users + @users!$.body > #201
+*/users + @users!$.body > #201
 
 // PUT
-^/users/:id ~ @users[$.id]!$.body > #json
+*/users/:id ~ @users[$.id]!$.body > #json
 
 // DELETE
-^/users/:id - @users[$.id]!- > #204
+*/users/:id - @users[$.id]!- > #204
 
 // PATCH
-^/users/:id ~ @users[$.id]!$.body > #json
+*/users/:id ~ @users[$.id]!$.body > #json
 ```
 
 ### URL Parameters
 
 ```cslop
-^/users/:id > @users[$.id] > #json
-^/posts/:postId/comments/:commentId > {
+*/users/:id > @users[$.id] > #json
+*/posts/:postId/comments/:commentId > {
   post: @posts[$.postId]
   comment: @comments[$.commentId]
   {post, comment}
@@ -43,7 +43,7 @@ Access parameters via `$.id`, `$.postId`, etc.
 ### Query Strings
 
 ```cslop
-^/search > {
+*/search > {
   q: $.query.q
   page: $.query.page ?? 0
   @products?{name~q}[:20:page*20]
@@ -57,7 +57,7 @@ Access via `$.query.<param>`.
 ### Request Body
 
 ```cslop
-^/users + {
+*/users + {
   name: $.body.name
   email: $.body.email
   @users!{name, email}
@@ -67,7 +67,7 @@ Access via `$.query.<param>`.
 ### Headers
 
 ```cslop
-^/protected > {
+*/protected > {
   token: $.headers.authorization
   jwt?(token) ?? #401
   #json({user:_})
@@ -77,7 +77,7 @@ Access via `$.query.<param>`.
 ### Cookies
 
 ```cslop
-^/profile > {
+*/profile > {
   sessionId: $.cookies.session
   // Use session
 } > #json
@@ -86,7 +86,7 @@ Access via `$.query.<param>`.
 ### Files
 
 ```cslop
-^/upload + {
+*/upload + {
   file: $.files.image
   file ?? #400("no file")
   // Process file
@@ -98,29 +98,29 @@ Access via `$.query.<param>`.
 ### JSON Response
 
 ```cslop
-^/users > @users > #json
+*/users > @users > #json
 ```
 
 ### HTML Response
 
 ```cslop
-^/ > ~<h1>Welcome</h1> > #html
+*/ > ~<h1>Welcome</h1> > #html
 ```
 
 ### Status Codes
 
 ```cslop
-^/users + @users!$.body > #201
+*/users + @users!$.body > #201
 
-^/users/:id > @users[$.id] >| #404 > #json
+*/users/:id > @users[$.id] >| #404 > #json
 
-^/error > #500("Internal error")
+*/error > #500("Internal error")
 ```
 
 ### Headers
 
 ```cslop
-^/api/data > {
+*/api/data > {
   data: @items
   #header("X-Total-Count", data.count)
   #json(data)
@@ -130,7 +130,7 @@ Access via `$.query.<param>`.
 ### Cookies
 
 ```cslop
-^/login + {
+*/login + {
   user: authenticate($.body)
   token: jwt(user)
   #cookie("token", token, {httpOnly:true, maxAge:86400})
@@ -141,9 +141,9 @@ Access via `$.query.<param>`.
 ### Redirects
 
 ```cslop
-^/old-url > #redirect("/new-url")
+*/old-url > #redirect("/new-url")
 
-^/login + {
+*/login + {
   authenticate($.body)
   #redirect("/dashboard")
 }
@@ -152,7 +152,7 @@ Access via `$.query.<param>`.
 ### File Downloads
 
 ```cslop
-^/download/:id > {
+*/download/:id > {
   file: @files[$.id]
   #file(file.path, file.name)
 }
@@ -166,13 +166,13 @@ Apply to all routes:
 
 ```cslop
 // Logging
-^* > {
+** > {
   log($.method, $.path)
   _  // Continue to route
 }
 
 // CORS
-^* > {
+** > {
   #header("Access-Control-Allow-Origin", "*")
   _
 }
@@ -182,13 +182,13 @@ Apply to all routes:
 
 ```cslop
 // Require auth for /api routes
-^/api/* > {
+*/api/* > {
   jwt?($.headers.auth) ?? #401
   _  // Continue with user in context
 }
 
 // Admin only
-^/admin/* > {
+*/admin/* > {
   jwt?($.headers.auth) ?? #401
   _.role == "admin" ? _ : #403
 }
@@ -200,13 +200,13 @@ Apply transformations to responses:
 
 ```cslop
 // Add timestamp to all API responses
-^/api/* >># {
+*/api/* >># {
   data: _,
   timestamp: now
 }
 
 // Wrap in success envelope
-^/api/* >># {
+*/api/* >># {
   success: true,
   data: _
 }
@@ -221,17 +221,17 @@ Split routes across files:
 ```cslop
 // routes/users.slop
 export {
-  ^/users > @users > #json
-  ^/users/:id > @users[$.id] > #json
-  ^/users + @users!$.body > #201
-  ^/users/:id ~ @users[$.id]!$.body > #json
-  ^/users/:id - @users[$.id]!- > #204
+  */users > @users > #json
+  */users/:id > @users[$.id] > #json
+  */users + @users!$.body > #201
+  */users/:id ~ @users[$.id]!$.body > #json
+  */users/:id - @users[$.id]!- > #204
 }
 
 // routes/posts.slop
 export {
-  ^/posts > @posts.users > #json
-  ^/posts/:id > @posts[$.id].users > #json
+  */posts > @posts.users > #json
+  */posts/:id > @posts[$.id].users > #json
   // ... more routes
 }
 
@@ -245,9 +245,9 @@ import "./routes/posts"
 ```cslop
 // Group routes under a prefix
 prefix("/api/v1", {
-  ^/users > @users > #json
-  ^/posts > @posts > #json
-  ^/comments > @comments > #json
+  */users > @users > #json
+  */posts > @posts > #json
+  */comments > @comments > #json
 })
 
 // Becomes:
@@ -271,7 +271,7 @@ validate: (schema, data) {
   data
 }
 
-^/users + {
+*/users + {
   schema: {
     name: {required:true},
     email: {required:true, email:true}
@@ -296,7 +296,7 @@ paginate: (data, page, size) {
   }
 }
 
-^/users > {
+*/users > {
   page: $.query.page ?? 0
   paginate(@users, page, 20)
 } > #json
@@ -311,7 +311,7 @@ rateLimit: (key, max, window) {
   @rateLimit!{key, ts:now}
 }
 
-^/api/* > rateLimit($.ip, 100, 3600) > _
+*/api/* > rateLimit($.ip, 100, 3600) > _
 ```
 
 ### Caching
@@ -328,7 +328,7 @@ cache: (key, ttl, fn) {
       }
 }
 
-^/expensive > cache("expensive:" + $.query.param, 300, {
+*/expensive > cache("expensive:" + $.query.param, 300, {
   // Expensive operation
   @data > complexTransform > result
 }) > #json
@@ -337,7 +337,7 @@ cache: (key, ttl, fn) {
 ### Webhooks
 
 ```cslop
-^/webhooks/stripe + {
+*/webhooks/stripe + {
   // Verify signature
   sig: $.headers["stripe-signature"]
   verify($.body, sig, env(STRIPE_SECRET)) ?? #401
@@ -355,7 +355,7 @@ cache: (key, ttl, fn) {
 ### Server-Sent Events
 
 ```cslop
-^/events > {
+*/events > {
   jwt?($.headers.auth) ?? #401
 
   #sse > {
@@ -371,7 +371,7 @@ cache: (key, ttl, fn) {
 ### WebSockets
 
 ```cslop
-^/ws > {
+*/ws > {
   jwt?($.query.token) ?? #401
 
   #ws > {
@@ -390,13 +390,13 @@ cache: (key, ttl, fn) {
 ### Route-Level Errors
 
 ```cslop
-^/users/:id > @users[$.id] >| #404 > #json
+*/users/:id > @users[$.id] >| #404 > #json
 ```
 
 ### Global Error Handler
 
 ```cslop
-^* >| {
+** >| {
   NotFound: #404({error:"Not found"})
   Unauthorized: #401({error:"Unauthorized"})
   ValidationError: #400({error:_.message})
@@ -407,7 +407,7 @@ cache: (key, ttl, fn) {
 ### Custom Error Types
 
 ```cslop
-^/users/:id > {
+*/users/:id > {
   user: @users[$.id]
   user ?? throw(NotFound("User not found"))
   user.active ?? throw(Forbidden("User inactive"))
@@ -421,16 +421,16 @@ cache: (key, ttl, fn) {
 
 ```cslop
 // Match any path under /static
-^/static/* > #file("public/" + $.path)
+*/static/* > #file("public/" + $.path)
 
 // Catch-all
-^/* > #404
+*/* > #404
 ```
 
 ### Optional Parameters
 
 ```cslop
-^/users/:id? > {
+*/users/:id? > {
   $.id
     ? @users[$.id]
     : @users
@@ -442,10 +442,10 @@ cache: (key, ttl, fn) {
 
 ```cslop
 // Only numeric IDs
-^/users/:id([0-9]+) > @users[$.id] > #json
+*/users/:id([0-9]+) > @users[$.id] > #json
 
 // Validate format
-^/posts/:slug([a-z0-9-]+) > @posts?{slug:$.slug}[0] > #json
+*/posts/:slug([a-z0-9-]+) > @posts?{slug:$.slug}[0] > #json
 ```
 
 ## Performance
@@ -453,7 +453,7 @@ cache: (key, ttl, fn) {
 ### Conditional Responses
 
 ```cslop
-^/users > {
+*/users > {
   etag: hash(@users.max(updatedAt))
   $.headers["if-none-match"] == etag
     ? #304
@@ -468,13 +468,13 @@ cache: (key, ttl, fn) {
 
 ```cslop
 // Automatic gzip compression
-^/api/* > compress > _
+*/api/* > compress > _
 ```
 
 ### Streaming
 
 ```cslop
-^/export > {
+*/export > {
   jwt?($.headers.auth) ?? #401
 
   #stream > {

@@ -97,7 +97,7 @@ Use the `?` operator to filter results:
 @users?{name~"john"}
 
 // Starts with
-@users?{email^"admin@"}
+@users?{email*"admin@"}
 
 // Ends with
 @users?{email$"@company.com"}
@@ -129,13 +129,13 @@ Use the `?` operator to filter results:
 
 ```cslop
 // Ascending (default)
-@users^name
+@users*name
 
 // Descending
-@users^-createdAt
+@users*-createdAt
 
 // Multiple sorts
-@users^-createdAt^name
+@users*-createdAt*name
 ```
 
 ## Pagination
@@ -150,7 +150,7 @@ Use `:limit:offset` syntax:
 @users:10:20
 
 // With filter and sort
-@users?{active:true}^-createdAt:20:0
+@users?{active:true}*-createdAt:20:0
 ```
 
 ## Insert
@@ -416,7 +416,7 @@ paginate: (query, page, size) {
 }
 
 // Usage
-^/users > paginate(@users, $.query.page ?? 0, 20) > #json
+*/users > paginate(@users, $.query.page ?? 0, 20) > #json
 ```
 
 ### Search
@@ -429,7 +429,7 @@ search: (table, fields, query) {
 }
 
 // Usage
-^/search > search(@products, [name, description], $.query.q) > #json
+*/search > search(@products, [name, description], $.query.q) > #json
 ```
 
 ## Performance Tips
@@ -454,7 +454,7 @@ search: (table, fields, query) {
 }
 
 // Validate before insert
-^/users + {
+*/users + {
   @users?{email:$.body.email}[0] ? #400("email exists") : _
   @users!$.body > #201
 }

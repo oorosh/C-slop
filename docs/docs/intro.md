@@ -23,7 +23,7 @@ C-slop is a programming language optimized for **machine efficiency** - specific
 Here's a complete REST API endpoint in C-slop:
 
 ```cslop
-^/users/:id > @users[$.id] > #json
+*/users/:id > @users[$.id] > #json
 ```
 
 The equivalent in JavaScript/Express:
@@ -52,8 +52,8 @@ Create a file `app.slop`:
 @:postgres(env(DB_URL))
 
 // Routes
-^/          > #html(~<h1>Hello C-slop!</h1>)
-^/api/users > @users > #json
+*/          > #html(~<h1>Hello C-slop!</h1>)
+*/api/users > @users > #json
 ```
 
 Run it:
@@ -78,7 +78,7 @@ C-slop is built on a few core principles:
 
 | Symbol | Meaning | Example |
 |--------|---------|---------|
-| `^` | Route definition | `^/users` |
+| `*` | Route definition | `*/users` |
 | `@` | Database table | `@users` |
 | `$` | Request/Input | `$.id`, `$.body` |
 | `#` | Response/Output | `#json`, `#html` |
