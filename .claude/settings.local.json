@@ -3,6 +3,11 @@
     "allow": [
       "Bash(find:*)",
       "Bash(git merge:*)",
+      "Bash(npx create-docusaurus@latest docs classic --typescript)",
+      "Bash(cd /Users/bogdanchayka/Projects/C-slop/docs && npm run build:*)",
+      "Bash(npm run build:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)"
     ]
