@@ -33,6 +33,10 @@ compiler/test/*.js
 !compiler/test/simple.js
 !compiler/test/with-imports.js
 
+# Database files
+compiler/*.db
+*.db
+
 # Temporary files
 *.tmp
 *.temp
