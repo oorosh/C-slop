@@ -1,0 +1,10 @@
+{
+  "database": {
+    "type": "sqlite",
+    "connection": "./dev.db"
+  },
+  "server": {
+    "port": 3000,
+    "host": "localhost"
+  }
+}

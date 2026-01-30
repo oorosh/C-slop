@@ -228,6 +228,24 @@ class Compiler {
     // @users?{active:true} -> db.users.findWhere({active:true})
     // @users! -> db.users.insert()
     // @users!{name:"x"} -> db.users.insert({name:"x"})
+    // @users[123]!- -> db.users.delete(123)
+
+    // Delete: @users[123]!-
+    const deleteMatch = dbOp.match(/^@(\w+)\[([^\]]+)\]!-$/);
+    if (deleteMatch) {
+      const [, table, id] = deleteMatch;
+      const compiledId = this.compileExpression(id);
+      return `db.${table}.delete(${compiledId})`;
+    }
+
+    // Update: @users[123]!{data}
+    const updateMatch = dbOp.match(/^@(\w+)\[([^\]]+)\]!(.+)$/);
+    if (updateMatch) {
+      const [, table, id, data] = updateMatch;
+      const compiledId = this.compileExpression(id);
+      const compiledData = this.compileExpression(data);
+      return `db.${table}.update(${compiledId}, ${compiledData})`;
+    }
 
     // Simple table reference
     if (/^@\w+$/.test(dbOp)) {

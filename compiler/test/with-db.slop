@@ -1,0 +1,12 @@
+// C-slop with persistent SQLite database
+// The database config is in slop.json
+
+*/ > #json({message: "C-slop with SQLite!", time: Date.now()})
+
+*/users > @users > #json
+
+*/users/:id > @users[$.id] > #json
+
+*/users + @users!$.body > #json
+
+*/users/:id - @users[$.id]!- > #204
