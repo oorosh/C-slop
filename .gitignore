@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+compiler/node_modules/
 
 # Build outputs
 build/
@@ -26,6 +27,11 @@ Thumbs.db
 docs/.docusaurus/
 docs/build/
 docs/node_modules/
+
+# Compiler generated files
+compiler/test/*.js
+!compiler/test/simple.js
+!compiler/test/with-imports.js
 
 # Temporary files
 *.tmp
