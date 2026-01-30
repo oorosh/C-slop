@@ -1,0 +1,11 @@
+{
+  "database": {
+    "type": "sqlite",
+    "connection": "./dev.db",
+    "comment": "Options: 'sqlite', 'memory'. PostgreSQL and MySQL coming soon!"
+  },
+  "server": {
+    "port": 3000,
+    "host": "localhost"
+  }
+}
