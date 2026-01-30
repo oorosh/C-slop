@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-docusaurus@latest docs classic --typescript)",
+      "Bash(cd /Users/bogdanchayka/Projects/C-slop/docs && npm run build:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}
