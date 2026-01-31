@@ -184,7 +184,7 @@ Database types: `memory`, `sqlite`
 
 ## SlopUI (CSS Library)
 
-SlopUI is a built-in CSS library similar to DaisyUI. It's included automatically in new projects.
+SlopUI is a built-in CSS library. It's included automatically in new projects.
 
 ### Theme Support
 
