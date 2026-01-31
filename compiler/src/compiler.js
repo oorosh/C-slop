@@ -48,6 +48,19 @@ class Compiler {
       this.compileLine(line);
     }
 
+    // SPA fallback - serve index.html for non-API, non-file routes
+    this.output.push('');
+    this.output.push('// SPA fallback for client-side routing');
+    this.output.push('if (runtime.config && runtime.config.server && runtime.config.server.static) {');
+    this.output.push('  const staticPath = require("path").resolve(__dirname, runtime.config.server.static);');
+    this.output.push('  const indexPath = require("path").join(staticPath, "index.html");');
+    this.output.push('  app.get("*", (req, res, next) => {');
+    this.output.push('    if (req.path.startsWith("/api") || req.path.includes(".")) return next();');
+    this.output.push('    if (require("fs").existsSync(indexPath)) res.sendFile(indexPath);');
+    this.output.push('    else next();');
+    this.output.push('  });');
+    this.output.push('}');
+
     // Start server at the end
     this.output.push('');
     this.output.push('// Start server');
