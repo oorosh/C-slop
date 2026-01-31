@@ -1,156 +1,158 @@
 # C-slop Compiler & Runtime
 
-A working implementation of the C-slop language - a token-minimal programming language for web applications.
+Full-stack compiler for the C-slop language - compiles backend `.slop` files and frontend `.ui` components.
 
 ## Installation
 
 ```bash
 cd compiler
 npm install
-npm link  # Install globally
+npm link  # Install 'cslop' globally
 ```
 
-## Usage
-
-### Run a .slop file
+## Commands
 
 ```bash
-cslop test.slop
-# or
-cslop run test.slop
+cslop create <name>      # Create new project with routing
+cslop watch              # Dev server with hot reload
+cslop start              # Production server
+cslop <file.slop>        # Run a .slop file
+cslop build <file> -o out.js  # Compile to JavaScript
 ```
 
-### Compile to JavaScript
+## Project Scaffolding
 
 ```bash
-cslop build test.slop -o output.js
+cslop create my-app
+cd my-app
+cslop watch
 ```
 
-## Example
+Creates:
+- `slop.json` - Configuration
+- `api.slop` - Backend API
+- `router.slop` - Client-side routing
+- `components/Home.ui` - Home page
+- `components/Counter.ui` - Example component
+- `dist/` - Static files
 
-Create a file `hello.slop`:
+## Backend (.slop files)
 
 ```cslop
-// Simple API
-*/ > #json({message: "Hello World"})
+# API Routes
+*/api/health > #json({status: "ok"})
 
 */users > @users > #json
 
 */users/:id > @users[$.id] > #json
 
 */users + @users!$.body > #json
+
+*/users/:id ^ @users[$.id]!$.body > #json
+
+*/users/:id - @users[$.id]!- > #204
 ```
 
-Run it:
+### Symbols
 
-```bash
-cslop hello.slop
+| Symbol | Meaning |
+|--------|---------|
+| `*` | Route definition |
+| `+` | POST method |
+| `^` | PUT method |
+| `-` | DELETE method |
+| `@` | Database table |
+| `$` | Request data |
+| `#` | Response |
+| `>` | Pipeline |
+| `?` | Filter |
+| `!` | Mutation |
+
+## Frontend (.ui files)
+
+```
+# Component with state
+$count:0
+$doubled := $count * 2
+
+~ fetch("/api/data") > $items
+
+<?
+
+.counter
+  h1["Count: @{$count}"]
+  p["Doubled: @{$doubled}"]
+  button["+" @ $count++]
+  button["-" @ $count--]
 ```
 
-Visit `http://localhost:3000` to see your API!
+### Features
 
-## Features
+- **State**: `$name:value` - Reactive signals
+- **Computed**: `$derived := expression`
+- **Effects**: `~ action` - Side effects
+- **Markup**: Indentation-based, CSS selectors
+- **Events**: `@ action` - Click handlers
+- **Interpolation**: `@{$var}` - Reactive text
+- **Components**: `@@Name` - Auto-imports
+- **Loops**: `$items` + indented template
+- **Conditionals**: `? $condition`
 
-### Supported Syntax
+## Routing (router.slop)
 
-- ✅ Routes with `*` symbol
-- ✅ Database operations with `@` symbol
-- ✅ Request data with `$` symbol
-- ✅ Response with `#` symbol
-- ✅ Pipeline operator `>`
-- ✅ Import Node modules
-- ✅ HTTP methods (GET, POST, PUT, DELETE)
-- ✅ In-memory database (for testing)
-
-### Import Node Modules
-
-```cslop
-import axios from "axios"
-import {format} from "date-fns"
-
-*/api/data > axios.get("https://api.example.com") > #json
-
-*/date > #json({date: format(Date.now(), "yyyy-MM-dd")})
+```
+# Syntax: /path > @@Component
+/ > @@Home
+/about > @@About
+/users/:id > @@UserDetail
 ```
 
-### Database Operations
+### Navigation
 
-```cslop
-// Get all
-@users > #json
-
-// Get by ID
-@users[$.id] > #json
-
-// Filter
-@users?{active:true} > #json
-
-// Insert
-@users!$.body > #json
+```
+a["Link" href="/path" @ nav /path]
+button["Go" @ nav /path]
 ```
 
-### Request Parameters
+## Configuration (slop.json)
 
-```cslop
-// URL params: /users/:id
-$.id
-
-// Query params: /search?q=test
-$.query.q
-
-// Body: POST /users
-$.body
-
-// Headers
-$.headers.authorization
+```json
+{
+  "name": "my-app",
+  "database": {
+    "type": "memory"
+  },
+  "server": {
+    "port": 3000,
+    "static": "./dist"
+  }
+}
 ```
 
-### Response Types
+Database types: `memory`, `sqlite`
 
-```cslop
-// JSON
-#json(data)
+## Architecture
 
-// HTML
-#html(content)
-
-// Status codes
-#201
-#404
-#500
-
-// Status with message
-#400("Bad request")
 ```
-
-## Limitations (MVP)
-
-This is an MVP implementation with the following limitations:
-
-1. **In-memory database** - No persistent storage yet
-2. **Limited operators** - Basic pipeline only
-3. **No middleware yet** - Coming soon
-4. **No complex queries** - Basic DB operations only
-5. **Simple parser** - May not handle all edge cases
-
-## Roadmap
-
-- [ ] Persistent database support (SQLite, PostgreSQL)
-- [ ] Full pipeline operators (>>, >?, >+, >!)
-- [ ] Middleware support
-- [ ] Template rendering (~)
-- [ ] Error handling (>|)
-- [ ] More built-in functions
-- [ ] Better parser with AST
-- [ ] Type checking
-- [ ] REPL mode
+compiler/
+├── src/
+│   ├── cli.js        # CLI commands
+│   ├── compiler.js   # Backend parser
+│   └── runtime.js    # Express wrapper
+├── frontend/
+│   ├── parser.js     # .ui parser
+│   ├── codegen.js    # JS generator
+│   ├── router-parser.js    # router.slop parser
+│   └── router-codegen.js   # Router generator
+└── runtime/
+    ├── signals.js    # Reactive signals (~1.5KB)
+    ├── dom.js        # DOM helpers (~1KB)
+    └── router.js     # Client-side router
+```
 
 ## Development
 
 ```bash
-# Test the compiler
-node test/test.js
-
-# Test with example file
-cslop test/example.slop
+npm test              # Run tests
+cslop test/example.slop  # Test with example
 ```

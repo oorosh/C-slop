@@ -20,6 +20,12 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
   - `list(array, fn)`: Map arrays to DOM elements
   - `navigate(path)`: SPA navigation helper
 
+- **router.js (~1KB)**: Client-side routing
+  - `$route` signal: Reactive route state (path, params, query)
+  - `defineRoutes(routes)`: Register route definitions
+  - `createRouter(target)`: Initialize router with target element
+  - Path matching with dynamic segments (`:id`)
+
 ### Parser (frontend/parser.js)
 **State Declarations:**
 - ✅ Simple state: `$count:0`
@@ -106,9 +112,10 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 - ❌ Slots/composition
 
 ### Navigation
-- ❌ Nav actions: `@ nav /path`
-- ❌ Route params: `@ nav /users/:id`
-- Runtime has `navigate()` but not wired to actions
+- ✅ Nav actions: `@ nav /path`
+- ✅ Route params: `/users/:id` accessible via `$route.params.id`
+- ✅ Router configuration: `router.slop` file
+- ✅ SPA navigation with history API
 
 ### Advanced Loops
 - ❌ Index access: `:index` or similar
@@ -132,7 +139,8 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 - ❌ Responsive utilities
 
 ### Tooling
-- ❌ Watch mode for development
+- ✅ Watch mode: `cslop watch` with hot reload
+- ✅ Project scaffolding: `cslop create <name>`
 - ❌ Source maps
 - ❌ Error reporting with line numbers
 - ❌ Optimization/minification
@@ -167,17 +175,15 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 ## 🎯 Next Steps (Priority Order)
 
 ### High Priority
-1. **Browser testing**: Open http://localhost:8080 and verify Counter works
-2. **Style integration**: Connect `parseStyleShorthand()` to element parsing
-3. **Watch mode**: Auto-recompile on .ui file changes
-4. **Error handling**: Better error messages with line numbers
+1. **Style integration**: Connect `parseStyleShorthand()` to element parsing
+2. **Error handling**: Better error messages with line numbers
+3. **Catch-all backend route**: Serve index.html for SPA routes
 
 ### Medium Priority
-5. **Two-way binding**: `input:$variable` syntax
-6. **Navigation**: Wire up `@ nav /path` to runtime
-7. **Event modifiers**: `:prevent`, `:stop`
-8. **Else branches**: `? condition [...] : [...]`
-9. **More event types**: `@input`, `@submit`, `@keydown`
+4. **Two-way binding**: `input:$variable` syntax
+5. **Event modifiers**: `:prevent`, `:stop`
+6. **Else branches**: `? condition [...] : [...]`
+7. **More event types**: `@input`, `@submit`, `@keydown`
 
 ### Low Priority
 10. **CSS optimization**: Deduplication, tree-shaking
@@ -199,15 +205,21 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 ## 📝 Usage
 
 ```bash
-# Compile components
+# Create a new project with routing
+cslop create my-app
+cd my-app
+
+# Start dev server with hot reload
+cslop watch
+
+# Visit http://localhost:3000
+```
+
+### Manual compilation
+```bash
+# Compile components only
 cd compiler/frontend
 node cli.js ../examples/components ../examples/public
-
-# Start dev server
-cd ../examples/public
-python3 -m http.server 8080
-
-# Visit http://localhost:8080
 ```
 
 ## 💡 Architecture Notes
@@ -252,23 +264,31 @@ The mount function wraps the render in an effect, so it re-runs when any signal 
 
 ## 📈 Size Targets
 
-- ✅ signals.js: Currently ~1.5KB (target: 2KB) ✓
-- ✅ dom.js: Currently ~1KB (target: 1KB) ✓
-- Runtime total: ~2.5KB (target: 3KB) ✓
+- ✅ signals.js: ~1.5KB (target: 2KB) ✓
+- ✅ dom.js: ~1KB (target: 1KB) ✓
+- ✅ router.js: ~1KB (target: 1KB) ✓
+- Runtime total: ~3.5KB (target: 4KB) ✓
 
 ## 🎉 Success Metrics
 
-**Phase 1 (Current):**
+**Phase 1 (Complete):**
 - [x] Basic component compilation works
 - [x] Counter example compiles correctly
 - [x] UserList example compiles correctly
 - [x] Event handlers generate properly
 - [x] Loops with property binding work
-- [ ] Browser testing confirms reactivity
+- [x] Watch mode with hot reload
+- [x] Project scaffolding
 
-**Phase 2 (Next):**
+**Phase 2 (Current):**
+- [x] Client-side routing (router.slop)
+- [x] Navigation syntax (@ nav /path)
+- [x] Route params ($route.params)
 - [ ] All syntax features implemented
 - [ ] Style shorthands work
 - [ ] Two-way binding functional
-- [ ] Watch mode for development
-- [ ] 5+ working example components
+
+**Phase 3 (Next):**
+- [ ] Catch-all route for SPA
+- [ ] Error boundaries
+- [ ] SSR/Hydration
