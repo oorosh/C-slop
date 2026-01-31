@@ -110,7 +110,8 @@ $doubled := $count * 2
 ### Navigation
 
 ```
-a["Link" href="/path" @ nav /path]
+# @nav sets href and click handler automatically
+a["Link" @ nav /path]
 button["Go" @ nav /path]
 ```
 

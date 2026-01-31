@@ -605,7 +605,7 @@ try {
   h1["Welcome to ${projectName}"]
   p["A C-slop application with client-side routing"]
   .nav
-    a["Go to Counter" href="/counter" @ nav /counter]
+    a["Go to Counter" @ nav /counter]
 `;
   fs.writeFileSync(path.join(projectPath, 'components', 'Home.ui'), homeUi);
   console.log('  \x1b[32m✓\x1b[0m components/Home.ui');
@@ -624,7 +624,7 @@ $count:0
     button["Reset" @ $count:0]
     button["+" @ $count++]
   .nav
-    a["Back to Home" href="/" @ nav /]
+    a["Back to Home" @ nav /]
 `;
   fs.writeFileSync(path.join(projectPath, 'components', 'Counter.ui'), counterUi);
   console.log('  \x1b[32m✓\x1b[0m components/Counter.ui');
@@ -899,7 +899,8 @@ div.app
 
 \`\`\`
 # Navigate on click (client-side routing)
-a["Go to Counter" href="/counter" @ nav /counter]
+# @nav sets both href and click handler
+a["Go to Counter" @ nav /counter]
 button["Back" @ nav /]
 \`\`\`
 

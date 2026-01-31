@@ -112,10 +112,10 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 - ❌ Slots/composition
 
 ### Navigation
-- ✅ Nav actions: `@ nav /path`
+- ✅ Nav actions: `@ nav /path` (sets href + onclick automatically)
 - ✅ Route params: `/users/:id` accessible via `$route.params.id`
 - ✅ Router configuration: `router.slop` file
-- ✅ SPA navigation with history API
+- ✅ SPA navigation with history API and preventDefault
 
 ### Advanced Loops
 - ❌ Index access: `:index` or similar

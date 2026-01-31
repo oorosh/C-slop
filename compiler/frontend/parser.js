@@ -310,13 +310,12 @@ export class Parser {
 
         const action = content.substring(start, end).trim();
 
-        // Check if it's a navigation action: nav /path
+        // Check if it's a navigation action: @nav /path (no space after @)
         const navMatch = action.match(/^nav\s+(\/[^\s]*)/);
         if (navMatch) {
           children.push({
-            type: 'Event',
-            eventType: 'nav',
-            action: navMatch[1]  // The path
+            type: 'Nav',
+            path: navMatch[1]
           });
         } else {
           children.push({

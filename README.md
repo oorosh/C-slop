@@ -102,8 +102,8 @@ $count:0
 ### Navigation
 
 ```
-# In components
-a["Go to Counter" href="/counter" @ nav /counter]
+# @nav sets href and click handler automatically
+a["Go to Counter" @ nav /counter]
 button["Back" @ nav /]
 ```
 

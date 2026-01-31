@@ -311,20 +311,22 @@ export class CodeGenerator {
       props[attr.name] = attr.value;
     });
 
+    // Extract navigation from children - sets both href and onclick
+    const navChildren = element.children.filter(c => c.type === 'Nav');
+    navChildren.forEach(nav => {
+      props.href = nav.path;
+      events.click = `e.preventDefault(); navigate('${nav.path}')`;
+      events.needsEvent = true;
+    });
+
     // Extract event handlers from children
     const eventChildren = element.children.filter(c => c.type === 'Event');
     eventChildren.forEach(event => {
-      // Handle navigation events - must prevent default for links
-      if (event.eventType === 'nav') {
-        events.click = `e.preventDefault(); navigate('${event.action}')`;
-        events.needsEvent = true;  // Flag to include event parameter
-      } else {
-        const action = this.compileAction(event.action);
+      const action = this.compileAction(event.action);
 
-        // Determine event type (for input it's already set above)
-        if (!events.input) {
-          events.click = action;
-        }
+      // Determine event type (for input it's already set above)
+      if (!events.input) {
+        events.click = action;
       }
     });
 
@@ -368,9 +370,9 @@ export class CodeGenerator {
   }
 
   generateChildren(children, indent, inLoop = false, elementTag = null) {
-    // Filter out Event nodes and Attribute nodes as they're handled in props
+    // Filter out Event, Nav, and Attribute nodes as they're handled in props
     // Filter out Variable and Text nodes for input elements (they're used for binding/placeholder)
-    let nonEventChildren = children.filter(c => c.type !== 'Event' && c.type !== 'Attribute');
+    let nonEventChildren = children.filter(c => c.type !== 'Event' && c.type !== 'Attribute' && c.type !== 'Nav');
 
     if (elementTag === 'input') {
       nonEventChildren = nonEventChildren.filter(c => c.type !== 'Variable' && c.type !== 'Text');
