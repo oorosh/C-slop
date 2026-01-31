@@ -308,7 +308,12 @@ export class CodeGenerator {
     // Extract HTML attributes from children
     const attributeChildren = element.children.filter(c => c.type === 'Attribute');
     attributeChildren.forEach(attr => {
-      props[attr.name] = attr.value;
+      if (attr.dynamic) {
+        // Dynamic attribute - will be handled specially in prop generation
+        props[attr.name] = { dynamic: true, value: attr.value };
+      } else {
+        props[attr.name] = attr.value;
+      }
     });
 
     // Extract navigation from children - sets both href and onclick
@@ -323,11 +328,8 @@ export class CodeGenerator {
     const eventChildren = element.children.filter(c => c.type === 'Event');
     eventChildren.forEach(event => {
       const action = this.compileAction(event.action);
-
-      // Determine event type (for input it's already set above)
-      if (!events.input) {
-        events.click = action;
-      }
+      const eventName = event.eventName || 'click';
+      events[eventName] = action;
     });
 
     // Build props object
@@ -340,6 +342,10 @@ export class CodeGenerator {
           propParts.push(`${key}: ${value}`);
         } else if (key === 'value') {
           propParts.push(`${key}: ${value}`);
+        } else if (typeof value === 'object' && value.dynamic) {
+          // Dynamic attribute - compile the expression
+          const expr = value.value.replace(/\$(\w+)/g, '$$$1.value');
+          propParts.push(`${key}: ${expr}`);
         } else if (key === 'placeholder' || key === 'type') {
           propParts.push(`${key}: "${value}"`);
         } else {
@@ -352,12 +358,13 @@ export class CodeGenerator {
       const needsEvent = events.needsEvent;
       Object.entries(events).forEach(([key, value]) => {
         if (key === 'needsEvent') return;  // Skip the flag
+        const handlerName = `on${key}`;
         if (key === 'input') {
           propParts.push(`oninput: ${value}`);
-        } else if (needsEvent) {
+        } else if (needsEvent && key === 'click') {
           propParts.push(`onclick: (e) => { ${value} }`);
         } else {
-          propParts.push(`onclick: () => { ${value} }`);
+          propParts.push(`${handlerName}: () => { ${value} }`);
         }
       });
     }

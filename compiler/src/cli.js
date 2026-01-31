@@ -605,7 +605,7 @@ try {
   h1["Welcome to ${projectName}"]
   p["A C-slop application with client-side routing"]
   .nav
-    a["Go to Counter" @ nav /counter]
+    a["Go to Counter" @nav(/counter)]
 `;
   fs.writeFileSync(path.join(projectPath, 'components', 'Home.ui'), homeUi);
   console.log('  \x1b[32m✓\x1b[0m components/Home.ui');
@@ -620,11 +620,11 @@ $count:0
 .counter
   h1["Count: @{$count}"]
   .buttons
-    button["-" @ $count--]
-    button["Reset" @ $count:0]
-    button["+" @ $count++]
+    button["-" @click($count--)]
+    button["Reset" @click($count:0)]
+    button["+" @click($count++)]
   .nav
-    a["Back to Home" @ nav /]
+    a["Back to Home" @nav(/)]
 `;
   fs.writeFileSync(path.join(projectPath, 'components', 'Counter.ui'), counterUi);
   console.log('  \x1b[32m✓\x1b[0m components/Counter.ui');
@@ -860,10 +860,37 @@ div.container
 ### Events
 
 \`\`\`
-button["Click" @ $count++]       # Increment
-button["Click" @ $count--]       # Decrement
-button["Reset" @ $count:0]       # Assignment
-button["Save" @ saveData]        # Call function
+button["Click" @click($count++)]         # Increment state
+button["Click" @click($count--)]         # Decrement state
+button["Reset" @click($count:0)]         # Assignment
+button["Save" @click(saveData)]          # Call function
+input[@input($text:e.target.value)]      # Input handler
+form[@submit(handleSubmit)]              # Form submit
+div[@mouseenter(show) @mouseleave(hide)] # Multiple events
+\`\`\`
+
+### Attributes
+
+\`\`\`
+# Static attribute (quoted string)
+img[alt{"Profile picture"}]
+
+# Dynamic attribute (from state)
+img[src{$imageUrl}]
+
+# Mixed static and dynamic
+img[src{$imageUrl} alt{"User avatar"}]
+a[href{$link} target{"_blank"}]
+div[class{$activeClass} id{"main"}]
+\`\`\`
+
+### Navigation
+
+\`\`\`
+# @nav sets href and click handler automatically
+a["Go to Counter" @nav(/counter)]
+a["Home" @nav(/)]
+button["Back" @nav(/)]
 \`\`\`
 
 ### Conditionals
@@ -885,23 +912,21 @@ $users                   # Iterate over array
     p[:email]            # Access item.email
 \`\`\`
 
-### Using Components
+### Input Binding
 
 \`\`\`
-<?
-
-div.app
-  @@Counter            # Render Counter component (auto-imports)
-  @@UserList           # Render UserList component (auto-imports)
+input[$name "Enter name"]     # Two-way bind to $name, placeholder text
+input[$email "Email"]
 \`\`\`
 
-### Navigation
+### API Actions in Events
 
 \`\`\`
-# Navigate on click (client-side routing)
-# @nav sets both href and click handler
-a["Go to Counter" @ nav /counter]
-button["Back" @ nav /]
+# POST and add to array
+button["Add" @click(post:/api/users {name:$name} > $users + clear)]
+
+# DELETE and remove from array
+button["Delete" @click(delete:/api/users/:id > $users - :id)]
 \`\`\`
 
 ---
@@ -920,25 +945,6 @@ Access route params in components:
 \`\`\`
 # UserDetail.ui - $route.params.id contains the :id value
 h1["User: @{$route.params.id}"]
-\`\`\`
-
----
-
-### Input Binding
-
-\`\`\`
-input[$name "Enter name"]     # Two-way bind to $name, placeholder text
-input[$email "Email"]
-\`\`\`
-
-### API Actions in Events
-
-\`\`\`
-# POST and add to array
-button["Add" @ post:/api/users {name:$name} > $users + clear]
-
-# DELETE and remove from array
-button["Delete" @ delete:/api/users/:id > $users - :id]
 \`\`\`
 
 ---
@@ -972,8 +978,8 @@ $count:0
 
 .counter
   h1["Count: @{$count}"]
-  button["-" @ $count--]
-  button["+" @ $count++]
+  button["-" @click($count--)]
+  button["+" @click($count++)]
 \`\`\`
 
 ### User List with API (UserList.ui)
@@ -989,7 +995,7 @@ $loading:true
 
 .container
   input[$name "Name"]
-  button["Add" @ post:/api/users {name:$name} > $users + clear]
+  button["Add" @click(post:/api/users {name:$name} > $users + clear)]
 
   ? $loading
     p["Loading..."]
@@ -997,7 +1003,7 @@ $loading:true
   $users
     .card
       span[:name]
-      button["X" @ delete:/api/users/:id > $users - :id]
+      button["X" @click(delete:/api/users/:id > $users - :id)]
 \`\`\`
 
 ### API Routes (api.slop)

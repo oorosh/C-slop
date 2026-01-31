@@ -82,21 +82,61 @@ $doubled := $count * 2
 .counter
   h1["Count: @{$count}"]
   p["Doubled: @{$doubled}"]
-  button["+" @ $count++]
-  button["-" @ $count--]
+  button["+" @click($count++)]
+  button["-" @click($count--)]
 ```
 
-### Features
+### State
 
-- **State**: `$name:value` - Reactive signals
-- **Computed**: `$derived := expression`
-- **Effects**: `~ action` - Side effects
-- **Markup**: Indentation-based, CSS selectors
-- **Events**: `@ action` - Click handlers
-- **Interpolation**: `@{$var}` - Reactive text
-- **Components**: `@@Name` - Auto-imports
-- **Loops**: `$items` + indented template
-- **Conditionals**: `? $condition`
+```
+$count:0                    # Signal with initial value
+$name:""                    # String state
+$items:[]                   # Array state
+$doubled := $count * 2      # Computed (reactive)
+```
+
+### Effects
+
+```
+~ fetch("/api/data") > $data              # Fetch and store
+~ fetch("/api") > $data > $loading:false  # Chain assignments
+```
+
+### Events
+
+```
+@click($count++)            # Increment state
+@click($count--)            # Decrement state
+@click($count:0)            # Reset state
+@click(handleSave)          # Call function
+@input($value:e.target.value)  # Input binding
+@submit(handleSubmit)       # Form submit
+@mouseenter(showTooltip)    # Any DOM event
+```
+
+### Attributes
+
+```
+src{$imageUrl}              # Dynamic attribute (from state)
+alt{"Static text"}          # Static attribute (quoted string)
+href{$link}                 # Dynamic href
+class{$activeClass}         # Dynamic class
+disabled{$isDisabled}       # Dynamic boolean
+```
+
+### Markup
+
+```
+div.container               # Element with class
+h1["Title"]                 # Element with text
+p["Count: @{$count}"]       # Reactive interpolation
+@@Counter                   # Component (auto-imports)
+? $loading                  # Conditional
+  p["Loading..."]
+$items                      # Loop over array
+  .card
+    span[:name]             # Access item.name
+```
 
 ## Routing (router.slop)
 
@@ -111,8 +151,8 @@ $doubled := $count * 2
 
 ```
 # @nav sets href and click handler automatically
-a["Link" @ nav /path]
-button["Go" @ nav /path]
+a["Link" @nav(/path)]
+button["Go" @nav(/path)]
 ```
 
 ## Configuration (slop.json)

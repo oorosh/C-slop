@@ -77,18 +77,41 @@ $count:0
 
 .counter
   h1["Count: @{$count}"]
-  button["+" @ $count++]
-  button["-" @ $count--]
+  button["+" @click($count++)]
+  button["-" @click($count--)]
 ```
 
-### Features
+### State & Effects
 
-- **State**: `$count:0` - Reactive signals
-- **Computed**: `$doubled := $count * 2`
-- **Effects**: `~ fetch("/api") > $data`
-- **Interpolation**: `@{$var}` - Reactive text
-- **Events**: `@ $count++` - Click handlers
-- **Components**: `@@Counter` - Auto-imports
+```
+$count:0                    # Reactive state
+$doubled := $count * 2      # Computed value
+~ fetch("/api") > $data     # Effect (runs on mount)
+```
+
+### Events
+
+```
+button["Click" @click($count++)]      # Increment
+button["Save" @click(handleSave)]     # Call function
+input[@input($text:e.target.value)]   # Input handler
+form[@submit(handleSubmit)]           # Form submit
+```
+
+### Attributes
+
+```
+img[src{$imageUrl} alt{"Avatar"}]     # Dynamic src, static alt
+a[href{$link} target{"_blank"}]       # Mixed attributes
+div[class{$activeClass}]              # Dynamic class
+```
+
+### Components
+
+```
+@@Counter                   # Use component (auto-imports)
+@@UserList
+```
 
 ## Routing (router.slop)
 
@@ -103,8 +126,8 @@ $count:0
 
 ```
 # @nav sets href and click handler automatically
-a["Go to Counter" @ nav /counter]
-button["Back" @ nav /]
+a["Go to Counter" @nav(/counter)]
+button["Back" @nav(/)]
 ```
 
 ## Commands

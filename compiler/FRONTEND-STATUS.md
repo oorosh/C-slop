@@ -50,10 +50,14 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 - ✅ Property access: `:name`, `:email` (in loops)
 
 **Events:**
-- ✅ Click handlers: `button["-" @ $count--]`
-- ✅ Increment/decrement: `@ $count++`, `@ $count--`
-- ✅ Assignments: `@ $count:0`
-- ✅ Inline events in brackets
+- ✅ Click handlers: `button["-" @click($count--)]`
+- ✅ Named events: `@click(action)`, `@input(action)`, `@submit(action)`
+- ✅ Increment/decrement: `@click($count++)`, `@click($count--)`
+- ✅ Assignments: `@click($count:0)`
+
+**Attributes:**
+- ✅ Static attributes: `alt{"Profile picture"}`
+- ✅ Dynamic attributes: `src{$imageUrl}`
 
 **Conditionals:**
 - ✅ Simple conditionals: `? $count > 10`
@@ -112,7 +116,7 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 - ❌ Slots/composition
 
 ### Navigation
-- ✅ Nav actions: `@ nav /path` (sets href + onclick automatically)
+- ✅ Nav actions: `@nav(/path)` (sets href + onclick automatically)
 - ✅ Route params: `/users/:id` accessible via `$route.params.id`
 - ✅ Router configuration: `router.slop` file
 - ✅ SPA navigation with history API and preventDefault

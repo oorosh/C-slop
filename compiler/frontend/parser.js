@@ -281,50 +281,47 @@ export class Parser {
         }
       }
 
-      // Handle HTML attributes: attrName="value" or attrName='/value'
-      if (content[i].match(/[a-zA-Z]/) && content.substring(i).match(/^([a-zA-Z][a-zA-Z0-9-]*)\s*=\s*["']/)) {
-        const attrMatch = content.substring(i).match(/^([a-zA-Z][a-zA-Z0-9-]*)\s*=\s*(["'])(.*?)\2/);
+      // Handle attributes: name{"value"} for static, name{$var} for dynamic
+      if (content[i].match(/[a-zA-Z]/) && content.substring(i).match(/^([a-zA-Z][a-zA-Z0-9-]*)\{/)) {
+        const attrMatch = content.substring(i).match(/^([a-zA-Z][a-zA-Z0-9-]*)\{([^}]*)\}/);
         if (attrMatch) {
+          const name = attrMatch[1];
+          const value = attrMatch[2].trim();
+          // Check if it's a quoted string or a variable
+          const isStatic = value.startsWith('"') && value.endsWith('"');
           children.push({
             type: 'Attribute',
-            name: attrMatch[1],
-            value: attrMatch[3]
+            name: name,
+            value: isStatic ? value.slice(1, -1) : value,
+            dynamic: !isStatic
           });
           i += attrMatch[0].length;
           continue;
         }
       }
 
-      // Handle event handlers: @ (but not @{...})
-      if (content[i] === '@' && content[i + 1] !== '{') {
-        // Find the action - everything from @ to the end (or until next space/quote)
-        let start = i + 1;
-        let end = start;
-        let depth = 0;
-        while (end < content.length) {
-          if (content[end] === '{') depth++;
-          else if (content[end] === '}') depth--;
-          else if (depth === 0 && (content[end] === '"' || (content[end] === ' ' && content[end + 1] === '"'))) break;
-          end++;
-        }
+      // Handle events: @eventName(action) or @nav(/path)
+      if (content[i] === '@') {
+        const eventMatch = content.substring(i).match(/^@([a-zA-Z]+)\(([^)]*)\)/);
+        if (eventMatch) {
+          const eventName = eventMatch[1];
+          const eventValue = eventMatch[2].trim();
 
-        const action = content.substring(start, end).trim();
-
-        // Check if it's a navigation action: @nav /path (no space after @)
-        const navMatch = action.match(/^nav\s+(\/[^\s]*)/);
-        if (navMatch) {
-          children.push({
-            type: 'Nav',
-            path: navMatch[1]
-          });
-        } else {
-          children.push({
-            type: 'Event',
-            action
-          });
+          if (eventName === 'nav') {
+            children.push({
+              type: 'Nav',
+              path: eventValue
+            });
+          } else {
+            children.push({
+              type: 'Event',
+              eventName: eventName,
+              action: eventValue
+            });
+          }
+          i += eventMatch[0].length;
+          continue;
         }
-        i = end;
-        continue;
       }
 
       // If we got here, move forward
