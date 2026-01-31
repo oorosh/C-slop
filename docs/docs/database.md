@@ -43,7 +43,7 @@ Returns all rows from the users table.
 
 Get a single record by primary key.
 
-### Select Specific Fields
+### Select Specific Fields 🚧 WIP
 
 ```cslop
 @users[name, email]
@@ -51,7 +51,7 @@ Get a single record by primary key.
 
 Only return the `name` and `email` columns.
 
-### Combine ID and Fields
+### Combine ID and Fields 🚧 WIP
 
 ```cslop
 @users[123][name, email]
@@ -59,7 +59,7 @@ Only return the `name` and `email` columns.
 
 Get specific fields for a single record.
 
-## Filtering
+## Filtering 🚧 WIP
 
 Use the `?` operator to filter results:
 
@@ -69,13 +69,15 @@ Use the `?` operator to filter results:
 @users?{active:true}
 ```
 
-### Multiple Conditions (AND)
+*Note: Only simple equality filters work currently.*
+
+### Multiple Conditions (AND) 🚧 WIP
 
 ```cslop
 @users?{active:true, role:"admin"}
 ```
 
-### Comparison Operators
+### Comparison Operators 🚧 WIP
 
 ```cslop
 // Greater than
@@ -91,7 +93,7 @@ Use the `?` operator to filter results:
 @users?{status!="banned"}
 ```
 
-### String Matching
+### String Matching 🚧 WIP
 
 ```cslop
 // Contains (LIKE %query%)
@@ -104,19 +106,19 @@ Use the `?` operator to filter results:
 @users?{email$"@company.com"}
 ```
 
-### OR Conditions
+### OR Conditions 🚧 WIP
 
 ```cslop
 @users?{role:"admin" || role:"moderator"}
 ```
 
-### IN Operator
+### IN Operator 🚧 WIP
 
 ```cslop
 @users?{id:[1,2,3,4,5]}
 ```
 
-### Null Checks
+### Null Checks 🚧 WIP
 
 ```cslop
 // IS NULL
@@ -126,7 +128,7 @@ Use the `?` operator to filter results:
 @users?{deletedAt!null}
 ```
 
-## Sorting
+## Sorting 🚧 WIP
 
 ```cslop
 // Ascending (default)
@@ -139,7 +141,7 @@ Use the `?` operator to filter results:
 @users*-createdAt*name
 ```
 
-## Pagination
+## Pagination 🚧 WIP
 
 Use `:limit:offset` syntax:
 
@@ -168,7 +170,7 @@ Use the `!` operator to insert data:
 
 Returns the inserted record with generated ID.
 
-### Bulk Insert
+### Bulk Insert 🚧 WIP
 
 ```cslop
 @users![
@@ -189,7 +191,7 @@ Combine ID selection with `!` to update:
 }
 ```
 
-### Conditional Update
+### Conditional Update 🚧 WIP
 
 ```cslop
 @users?{email:"old@x.com"}!{email:"new@x.com"}
@@ -209,7 +211,7 @@ Use `!-` to delete:
 @users?{inactive:true, createdAt<now-31536000}!-
 ```
 
-## Joins
+## Joins 🚧 WIP
 
 C-slop automatically joins tables using foreign key relationships:
 
@@ -227,14 +229,14 @@ C-slop automatically joins tables using foreign key relationships:
 @posts[456].users
 ```
 
-### Multiple Joins
+### Multiple Joins 🚧 WIP
 
 ```cslop
 // Posts with author and comments
 @posts.users.comments
 ```
 
-### Select Fields Across Joins
+### Select Fields Across Joins 🚧 WIP
 
 ```cslop
 @posts.users[
@@ -245,42 +247,42 @@ C-slop automatically joins tables using foreign key relationships:
 ]
 ```
 
-## Aggregations
+## Aggregations 🚧 WIP
 
-### Count
+### Count 🚧 WIP
 
 ```cslop
 @users.count
 @users?{active:true}.count
 ```
 
-### Sum
+### Sum 🚧 WIP
 
 ```cslop
 @orders.sum(total)
 @orders?{status:"paid"}.sum(total)
 ```
 
-### Average
+### Average 🚧 WIP
 
 ```cslop
 @products.avg(price)
 ```
 
-### Min/Max
+### Min/Max 🚧 WIP
 
 ```cslop
 @products.min(price)
 @products.max(price)
 ```
 
-### Group By
+### Group By 🚧 WIP
 
 ```cslop
 @orders.group(userId).sum(total)
 ```
 
-## Transactions
+## Transactions 🚧 WIP
 
 Wrap operations in a transaction:
 
@@ -299,7 +301,7 @@ Wrap operations in a transaction:
 
 If any operation fails, all changes are rolled back.
 
-## Raw SQL
+## Raw SQL 🚧 WIP
 
 For complex queries not covered by the DSL:
 
@@ -313,13 +315,13 @@ For complex queries not covered by the DSL:
 ")
 ```
 
-### Parameterized Queries
+### Parameterized Queries 🚧 WIP
 
 ```cslop
 @raw("SELECT * FROM users WHERE email = ?", [$.query.email])
 ```
 
-## Schema Definition
+## Schema Definition 🚧 WIP
 
 Optional schema hints for type safety and migrations:
 
@@ -356,7 +358,7 @@ Optional schema hints for type safety and migrations:
 }
 ```
 
-## Indexes
+## Indexes 🚧 WIP
 
 Define indexes for performance:
 
@@ -367,7 +369,7 @@ Define indexes for performance:
 @products.index.fulltext(name, description)
 ```
 
-## Migrations
+## Migrations 🚧 WIP
 
 Generate migrations from schema changes:
 
@@ -377,9 +379,9 @@ cslop migrate:run
 cslop migrate:rollback
 ```
 
-## Common Patterns
+## Common Patterns 🚧 WIP
 
-### Soft Deletes
+### Soft Deletes 🚧 WIP
 
 ```cslop
 // Instead of deleting, mark as deleted

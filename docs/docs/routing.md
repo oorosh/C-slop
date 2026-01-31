@@ -31,7 +31,7 @@ HTTP routing is a first-class feature in C-slop using the `*` symbol.
 
 ```cslop
 */users/:id > @users[$.id] > #json
-*/posts/:postId/comments/:commentId > {
+*/posts/:postId/comments/:commentId > {   // 🚧 WIP (logic blocks)
   post: @posts[$.postId]
   comment: @comments[$.commentId]
   {post, comment}
@@ -40,7 +40,7 @@ HTTP routing is a first-class feature in C-slop using the `*` symbol.
 
 Access parameters via `$.id`, `$.postId`, etc.
 
-### Query Strings
+### Query Strings 🚧 WIP
 
 ```cslop
 */search > {
@@ -52,9 +52,9 @@ Access parameters via `$.id`, `$.postId`, etc.
 
 Access via `$.query.<param>`.
 
-## Request Data
+## Request Data 🚧 WIP
 
-### Request Body
+### Request Body 🚧 WIP
 
 ```cslop
 */users + {
@@ -64,7 +64,7 @@ Access via `$.query.<param>`.
 } > #json
 ```
 
-### Headers
+### Headers 🚧 WIP
 
 ```cslop
 */protected > {
@@ -74,7 +74,7 @@ Access via `$.query.<param>`.
 }
 ```
 
-### Cookies
+### Cookies 🚧 WIP
 
 ```cslop
 */profile > {
@@ -83,7 +83,7 @@ Access via `$.query.<param>`.
 } > #json
 ```
 
-### Files
+### Files 🚧 WIP
 
 ```cslop
 */upload + {
@@ -101,7 +101,7 @@ Access via `$.query.<param>`.
 */users > @users > #json
 ```
 
-### HTML Response
+### HTML Response 🚧 WIP
 
 ```cslop
 */ > ~<h1>Welcome</h1> > #html
@@ -112,12 +112,12 @@ Access via `$.query.<param>`.
 ```cslop
 */users + @users!$.body > #201
 
-*/users/:id > @users[$.id] >| #404 > #json
+*/users/:id > @users[$.id] >| #404 > #json  // 🚧 WIP (>| operator)
 
 */error > #500("Internal error")
 ```
 
-### Headers
+### Headers 🚧 WIP
 
 ```cslop
 */api/data > {
@@ -127,7 +127,7 @@ Access via `$.query.<param>`.
 }
 ```
 
-### Cookies
+### Cookies 🚧 WIP
 
 ```cslop
 */login + {
@@ -138,7 +138,7 @@ Access via `$.query.<param>`.
 }
 ```
 
-### Redirects
+### Redirects 🚧 WIP
 
 ```cslop
 */old-url > #redirect("/new-url")
@@ -149,7 +149,7 @@ Access via `$.query.<param>`.
 }
 ```
 
-### File Downloads
+### File Downloads 🚧 WIP
 
 ```cslop
 */download/:id > {
@@ -158,9 +158,9 @@ Access via `$.query.<param>`.
 }
 ```
 
-## Middleware
+## Middleware 🚧 WIP
 
-### Global Middleware
+### Global Middleware 🚧 WIP
 
 Apply to all routes:
 
@@ -178,7 +178,7 @@ Apply to all routes:
 }
 ```
 
-### Path-Based Middleware
+### Path-Based Middleware 🚧 WIP
 
 ```cslop
 // Require auth for /api routes
@@ -194,7 +194,7 @@ Apply to all routes:
 }
 ```
 
-### Response Transform
+### Response Transform 🚧 WIP
 
 Apply transformations to responses:
 
@@ -212,9 +212,9 @@ Apply transformations to responses:
 }
 ```
 
-## Route Organization
+## Route Organization 🚧 WIP
 
-### Modular Routes
+### Modular Routes 🚧 WIP
 
 Split routes across files:
 
@@ -240,7 +240,7 @@ import "./routes/users"
 import "./routes/posts"
 ```
 
-### Prefix Groups
+### Prefix Groups 🚧 WIP
 
 ```cslop
 // Group routes under a prefix
@@ -256,9 +256,9 @@ prefix("/api/v1", {
 // GET /api/v1/comments
 ```
 
-## Advanced Patterns
+## Advanced Patterns 🚧 WIP
 
-### Validation
+### Validation 🚧 WIP
 
 ```cslop
 validate: (schema, data) {
@@ -281,7 +281,7 @@ validate: (schema, data) {
 }
 ```
 
-### Pagination
+### Pagination 🚧 WIP
 
 ```cslop
 paginate: (data, page, size) {
@@ -302,7 +302,7 @@ paginate: (data, page, size) {
 } > #json
 ```
 
-### Rate Limiting
+### Rate Limiting 🚧 WIP
 
 ```cslop
 rateLimit: (key, max, window) {
@@ -314,7 +314,7 @@ rateLimit: (key, max, window) {
 */api/* > rateLimit($.ip, 100, 3600) > _
 ```
 
-### Caching
+### Caching 🚧 WIP
 
 ```cslop
 cache: (key, ttl, fn) {
@@ -334,7 +334,7 @@ cache: (key, ttl, fn) {
 }) > #json
 ```
 
-### Webhooks
+### Webhooks 🚧 WIP
 
 ```cslop
 */webhooks/stripe + {
@@ -352,7 +352,7 @@ cache: (key, ttl, fn) {
 }
 ```
 
-### Server-Sent Events
+### Server-Sent Events 🚧 WIP
 
 ```cslop
 */events > {
@@ -368,7 +368,7 @@ cache: (key, ttl, fn) {
 }
 ```
 
-### WebSockets
+### WebSockets 🚧 WIP
 
 ```cslop
 */ws > {
@@ -385,15 +385,15 @@ cache: (key, ttl, fn) {
 }
 ```
 
-## Error Handling
+## Error Handling 🚧 WIP
 
-### Route-Level Errors
+### Route-Level Errors 🚧 WIP
 
 ```cslop
 */users/:id > @users[$.id] >| #404 > #json
 ```
 
-### Global Error Handler
+### Global Error Handler 🚧 WIP
 
 ```cslop
 ** >| {
@@ -404,7 +404,7 @@ cache: (key, ttl, fn) {
 }
 ```
 
-### Custom Error Types
+### Custom Error Types 🚧 WIP
 
 ```cslop
 */users/:id > {
@@ -415,9 +415,9 @@ cache: (key, ttl, fn) {
 }
 ```
 
-## Route Matching
+## Route Matching 🚧 WIP
 
-### Wildcards
+### Wildcards 🚧 WIP
 
 ```cslop
 // Match any path under /static
@@ -427,7 +427,7 @@ cache: (key, ttl, fn) {
 */* > #404
 ```
 
-### Optional Parameters
+### Optional Parameters 🚧 WIP
 
 ```cslop
 */users/:id? > {
@@ -438,7 +438,7 @@ cache: (key, ttl, fn) {
 }
 ```
 
-### Regex Patterns
+### Regex Patterns 🚧 WIP
 
 ```cslop
 // Only numeric IDs
@@ -448,9 +448,9 @@ cache: (key, ttl, fn) {
 */posts/:slug([a-z0-9-]+) > @posts?{slug:$.slug}[0] > #json
 ```
 
-## Performance
+## Performance 🚧 WIP
 
-### Conditional Responses
+### Conditional Responses 🚧 WIP
 
 ```cslop
 */users > {
@@ -464,14 +464,14 @@ cache: (key, ttl, fn) {
 }
 ```
 
-### Compression
+### Compression 🚧 WIP
 
 ```cslop
 // Automatic gzip compression
 */api/* > compress > _
 ```
 
-### Streaming
+### Streaming 🚧 WIP
 
 ```cslop
 */export > {
@@ -485,7 +485,7 @@ cache: (key, ttl, fn) {
 }
 ```
 
-## Testing Routes
+## Testing Routes 🚧 WIP
 
 ```cslop
 // test/routes.test.slop

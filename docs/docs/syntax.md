@@ -26,7 +26,7 @@ Routes are first-class language constructs using the `*` symbol.
 */users/:id - @users[$.id]!- > #204
 ```
 
-### Routes with Logic
+### Routes with Logic 🚧 WIP
 
 ```cslop
 */login + {
@@ -35,7 +35,7 @@ Routes are first-class language constructs using the `*` symbol.
 }
 ```
 
-### Middleware
+### Middleware 🚧 WIP
 
 ```cslop
 // Apply to all routes
@@ -58,16 +58,16 @@ Database tables are accessed with the `@` symbol.
 // Select all
 @users
 
-// Select specific fields
+// Select specific fields 🚧 WIP
 @users[name,email]
 
 // Get by ID
 @users[123]
 
-// Filter
+// Filter 🚧 WIP (only simple equality works)
 @users?{active:true, age>21}
 
-// Complex query with limit/offset
+// Complex query with limit/offset 🚧 WIP
 @users?{role:"admin"}[name,email]:10:0
 ```
 
@@ -89,7 +89,7 @@ Database tables are accessed with the `@` symbol.
 @users[123]!-
 ```
 
-### Joins
+### Joins 🚧 WIP
 
 ```cslop
 // Implicit join on foreign keys
@@ -99,7 +99,7 @@ Database tables are accessed with the `@` symbol.
 @users[123].posts
 ```
 
-### Raw SQL
+### Raw SQL 🚧 WIP
 
 ```cslop
 @raw("SELECT * FROM users WHERE created_at > NOW() - INTERVAL 7 DAY")
@@ -126,9 +126,9 @@ Send responses with the `#` symbol.
 ```cslop
 #json(data)        // JSON response
 #html(content)     // HTML response
-#text(str)         // Plain text
-#file(path)        // File download
-#redirect(url)     // Redirect
+#text(str)         // Plain text 🚧 WIP
+#file(path)        // File download 🚧 WIP
+#redirect(url)     // Redirect 🚧 WIP
 
 // Status codes
 #200               // OK
@@ -140,7 +140,7 @@ Send responses with the `#` symbol.
 #404               // Not found
 #500               // Server error
 
-// Set headers/cookies
+// Set headers/cookies 🚧 WIP
 #header(k, v)
 #cookie(k, v)
 ```
@@ -156,10 +156,10 @@ Send responses with the `#` symbol.
 // Nested objects
 {user:{name:"x"}, meta:{ts:now}}
 
-// Spread operator
+// Spread operator 🚧 WIP
 {...obj, newKey:"val"}
 
-// Destructuring
+// Destructuring 🚧 WIP
 {a,b}: obj  // a=obj.a, b=obj.b
 ```
 
@@ -179,9 +179,9 @@ arr[0]
 obj.nested.deep.value
 ```
 
-## Functions
+## Functions 🚧 WIP
 
-### Named Functions
+### Named Functions 🚧 WIP
 
 ```cslop
 fn add(a,b) a+b
@@ -191,7 +191,7 @@ fn validate(user) {
 }
 ```
 
-### Arrow Functions
+### Arrow Functions 🚧 WIP
 
 ```cslop
 add: (a,b) a+b
@@ -201,7 +201,7 @@ validate: (user) {
 }
 ```
 
-### Pipeline Functions
+### Pipeline Functions 🚧 WIP
 
 ```cslop
 */data > fetch > parse > validate > @store! > #json
@@ -215,7 +215,7 @@ validate: (user) {
 cond ? yes : no
 ```
 
-### Multi-Branch
+### Multi-Branch 🚧 WIP
 
 ```cslop
 x ?
@@ -224,45 +224,45 @@ x ?
   _   : "small"
 ```
 
-### Guard Clauses
+### Guard Clauses 🚧 WIP
 
 ```cslop
 */admin > $.role=="admin" ? @data > #json : #403
 ```
 
-### Nullish Coalescing
+### Nullish Coalescing 🚧 WIP
 
 ```cslop
 $.title ?? "Untitled"
 ```
 
-## Loops & Transforms
+## Loops & Transforms 🚧 WIP
 
-### Map
+### Map 🚧 WIP
 
 ```cslop
 @users >> _.name.upper
 ```
 
-### Filter
+### Filter 🚧 WIP
 
 ```cslop
 @users >? _.age > 18
 ```
 
-### Reduce
+### Reduce 🚧 WIP
 
 ```cslop
 @users >+ _.balance : 0
 ```
 
-### Each (Side Effects)
+### Each (Side Effects) 🚧 WIP
 
 ```cslop
 @users >! log(_)
 ```
 
-### Chained Operations
+### Chained Operations 🚧 WIP
 
 ```cslop
 @users
@@ -271,27 +271,27 @@ $.title ?? "Untitled"
   >+ _.bal : 0
 ```
 
-## Templates & Rendering
+## Templates & Rendering 🚧 WIP
 
-### Inline HTML
+### Inline HTML 🚧 WIP
 
 ```cslop
 ~<div>{user.name}</div>
 ```
 
-### Template Files
+### Template Files 🚧 WIP
 
 ```cslop
 ~views/user(user)
 ```
 
-### Components
+### Components 🚧 WIP
 
 ```cslop
 Box: ~<div class="box">{children}</div>
 ```
 
-### List Rendering
+### List Rendering 🚧 WIP
 
 ```cslop
 ~<ul>
@@ -299,7 +299,7 @@ Box: ~<div class="box">{children}</div>
 </ul>
 ```
 
-### Conditional Rendering
+### Conditional Rendering 🚧 WIP
 
 ```cslop
 ~<div>
@@ -310,21 +310,21 @@ Box: ~<div class="box">{children}</div>
 </div>
 ```
 
-## Error Handling
+## Error Handling 🚧 WIP
 
-### Try-Catch Shorthand
+### Try-Catch Shorthand 🚧 WIP
 
 ```cslop
 dangerous >| fallback
 ```
 
-### Chain with Error
+### Chain with Error 🚧 WIP
 
 ```cslop
 @users[$.id] >| #404
 ```
 
-### Multiple Catches
+### Multiple Catches 🚧 WIP
 
 ```cslop
 operation >| {
@@ -342,15 +342,15 @@ operation >| {
 now              // Current timestamp
 uuid             // Generate UUID
 hash(s)          // Hash string
-jwt(data)        // JWT encode
-jwt?(token)      // JWT decode
+jwt(data)        // JWT encode 🚧 WIP
+jwt?(token)      // JWT decode 🚧 WIP
 env(key)         // Environment variable
-log(x)           // Console log
-sleep(ms)        // Delay
-fetch(url)       // HTTP fetch
+log(x)           // Console log 🚧 WIP
+sleep(ms)        // Delay 🚧 WIP
+fetch(url)       // HTTP fetch 🚧 WIP
 ```
 
-### String Methods
+### String Methods 🚧 WIP
 
 ```cslop
 str.upper        // Uppercase
@@ -359,7 +359,7 @@ str.trim         // Trim whitespace
 str.split(sep)   // Split string
 ```
 
-### Array Methods
+### Array Methods 🚧 WIP
 
 ```cslop
 arr.len          // Length
@@ -392,12 +392,12 @@ arr.join(sep)    // Join to string
 
 ```cslop
 >    // Pipe
->>   // Map
->?   // Filter
->+   // Reduce
->!   // Each
->|   // Error catch
->>#  // Response transform
+>>   // Map 🚧 WIP
+>?   // Filter 🚧 WIP
+>+   // Reduce 🚧 WIP
+>!   // Each 🚧 WIP
+>|   // Error catch 🚧 WIP
+>>#  // Response transform 🚧 WIP
 ```
 
 ## Comments
@@ -422,7 +422,7 @@ app/
     auth.slop
 ```
 
-## Schema Definition
+## Schema Definition 🚧 WIP
 
 Optional type hints for database tables:
 

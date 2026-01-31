@@ -198,7 +198,9 @@ nav.navbar
     a.navbar-item["Contact" @nav(/contact)]
 ```
 
-### Tabs
+### Tabs 🚧 WIP
+
+*Note: CSS only - JavaScript tab switching not yet implemented*
 
 ```
 .tabs
@@ -238,7 +240,9 @@ nav.navbar
   img[src{$userAvatar}]
 ```
 
-## Modal
+## Modal 🚧 WIP
+
+*Note: CSS only - JavaScript toggle not yet implemented*
 
 ```
 .modal
@@ -250,7 +254,9 @@ nav.navbar
       button.btn.btn-primary["Confirm"]
 ```
 
-## Dropdown
+## Dropdown 🚧 WIP
+
+*Note: CSS only - JavaScript toggle not yet implemented*
 
 ```
 .dropdown
@@ -261,7 +267,9 @@ nav.navbar
     a["Option 3"]
 ```
 
-## Tooltips
+## Tooltips 🚧 WIP
+
+*Note: CSS only - JavaScript positioning not yet implemented*
 
 ```
 .tooltip[data-tip{"This is a tooltip"}]
