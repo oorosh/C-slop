@@ -1,359 +1,400 @@
 ---
-sidebar_position: 3
+sidebar_position: 8
 ---
 
 # Examples
 
-Real-world examples of C-slop in action.
+Real-world examples of C-slop full-stack applications.
 
-## Complete Todo API
+## Counter App
 
-A full CRUD API for a todo application:
+The classic counter example with SlopUI styling.
 
-```cslop
-// Config
-@:postgres(env(DB_URL))
+**components/Counter.ui:**
+```
+$count:0
+$doubled := $count * 2
 
-// Middleware - JWT authentication
-*/api/* > jwt?($.headers.auth) ? {user:_} : #401
+<?
 
-// List todos for current user
-*/api/todos > @todos?{userId:$.user.id} > #json
+.container.text-center.py-8
+  .card.mx-auto
+    h1.text-4xl.font-bold[@{$count}]
+    p.text-secondary["Doubled: @{$doubled}"]
+    .flex.gap-2.justify-center.mt-4
+      button.btn.btn-secondary["-" @click($count--)]
+      button.btn.btn-outline["Reset" @click($count:0)]
+      button.btn.btn-primary["+" @click($count++)]
+```
 
-// Get single todo
-*/api/todos/:id > @todos[$.id] > #json
+---
 
-// Create todo
-*/api/todos + {
-  $.body.title ?? #400("title required")
-  {...$.body, userId:$.user.id, ts:now} > @todos! > #201
-}
+## Todo App
 
-// Update todo
-*/api/todos/:id ~ $.body > @todos[$.id]! > #json
+A complete todo application with API integration.
 
-// Delete todo
+**api.slop:**
+```
+# Todo API
+*/api/todos > @todos > #json
+*/api/todos + @todos!$.body > #json
 */api/todos/:id - @todos[$.id]!- > #204
+*/api/todos/:id ^ @todos[$.id]!$.body > #json
 ```
 
-**Lines**: 15
-**Tokens**: ~60
-**Equivalent Express.js**: ~80 lines, ~400 tokens
+**components/TodoList.ui:**
+```
+$todos:[]
+$newTodo:""
+$loading:true
 
----
+~ fetch("/api/todos") > $todos > $loading:false
 
-## User Authentication
+<?
 
-Complete auth system with registration, login, and protected routes:
+.container.py-8
+  h1["My Todos"]
 
-```cslop
-// Register new user
-*/auth/register + {
-  // Validate input
-  $.body.email ?? #400("email required")
-  $.body.pass ?? #400("password required")
+  .flex.gap-2.mb-6
+    input.input.flex-1[$newTodo "What needs to be done?"]
+    button.btn.btn-primary["Add" @click(post:/api/todos {title:$newTodo,done:false} > $todos + clear)]
 
-  // Check if user exists
-  @users?{email:$.body.email}[0] ? #400("email exists") : _
+  ? $loading
+    p.text-center["Loading..."]
 
-  // Create user with hashed password
-  {
-    email: $.body.email,
-    pass: hash($.body.pass),
-    ts: now
-  } > @users! > {token: jwt(_)} > #json
-}
+  ? $todos.length == 0
+    p.text-center.text-secondary["No todos yet. Add one above!"]
 
-// Login
-*/auth/login + {
-  u: @users?{email:$.body.email}[0]
-  u ?? #401("invalid credentials")
-  u.pass == hash($.body.pass)
-    ? {token: jwt({id:u.id, email:u.email})}
-    : #401("invalid credentials")
-  > #json
-}
-
-// Protected route
-*/profile > {
-  jwt?($.headers.auth) ?? #401
-  @users[_.id] > #json
-}
+  $todos
+    .card.mb-2
+      .flex.justify-between.items-center
+        .flex.items-center.gap-3
+          input.checkbox[type{"checkbox"} @click(toggleTodo)]
+          span[:title]
+        button.btn.btn-sm.btn-error["Delete" @click(delete:/api/todos/:id > $todos - :id)]
 ```
 
 ---
 
-## Blog Platform
+## User Dashboard
 
-A simple blog with posts, comments, and authors:
+Dashboard with stats and user management.
 
-```cslop
-// List all posts with author info
-*/posts > @posts.users[title,body,createdAt,users.name] > #json
+**components/Dashboard.ui:**
+```
+$stats:{}
+$users:[]
+$loading:true
 
-// Get single post with comments
-*/posts/:id > {
-  post: @posts[$.id].users
-  comments: @comments?{postId:$.id}.users
-  {post, comments}
-} > #json
+~ fetch("/api/stats") > $stats > $loading:false
+~ fetch("/api/users") > $users
 
-// Create post
-*/posts + {
-  jwt?($.headers.auth) ?? #401
-  {
-    ...$.body,
-    userId: _.id,
-    createdAt: now
-  } > @posts! > #201
-}
+<?
 
-// Add comment
-*/posts/:id/comments + {
-  jwt?($.headers.auth) ?? #401
-  {
-    postId: $.id,
-    userId: _.id,
-    body: $.body.text,
-    createdAt: now
-  } > @comments! > #201
-}
+.container.py-8
+  h1.mb-6["Dashboard"]
 
-// Render blog homepage
-*/ > {
-  posts: @posts.users[:10]
-  ~views/blog({posts})
-} > #html
+  # Stats Cards
+  .grid.grid-cols-3.gap-4.mb-8
+    .card.text-center.p-6
+      h2.text-3xl.font-bold[@{$stats.totalUsers}]
+      p.text-secondary["Total Users"]
+    .card.text-center.p-6
+      h2.text-3xl.font-bold[@{$stats.activeToday}]
+      p.text-secondary["Active Today"]
+    .card.text-center.p-6
+      h2.text-3xl.font-bold["$@{$stats.revenue}"]
+      p.text-secondary["Revenue"]
+
+  # Recent Users
+  .card
+    .card-header
+      .flex.justify-between.items-center
+        h2.card-title["Recent Users"]
+        a.btn.btn-sm.btn-primary["View All" @nav(/users)]
+    .card-body
+      table.table
+        thead
+          tr
+            th["Name"]
+            th["Email"]
+            th["Status"]
+        tbody
+          $users
+            tr
+              td[:name]
+              td[:email]
+              td
+                span.badge.badge-success["Active"]
 ```
 
 ---
 
-## E-commerce Cart
+## Authentication
 
-Shopping cart with products and orders:
+Login form with validation.
 
-```cslop
-// Get products
-*/products > @products?{active:true} > #json
+**components/Login.ui:**
+```
+$email:""
+$password:""
+$error:""
+$loading:false
 
-// Get product by ID
-*/products/:id > @products[$.id] >| #404 > #json
+<?
 
-// Add to cart
-*/cart + {
-  jwt?($.headers.auth) ?? #401
-  product: @products[$.body.productId]
-  {
-    userId: _.id,
-    productId: product.id,
-    quantity: $.body.quantity,
-    price: product.price
-  } > @cart! > #201
-}
+.container.py-8
+  .card.mx-auto
+    h1.card-title.text-center["Login"]
 
-// Get cart
-*/cart > {
-  jwt?($.headers.auth) ?? #401
-  items: @cart?{userId:_.id}.products
-  total: items >+ _.price * _.quantity : 0
-  {items, total}
-} > #json
+    ? $error
+      .alert.alert-error.mb-4[@{$error}]
 
-// Checkout
-*/checkout + {
-  jwt?($.headers.auth) ?? #401
-  cartItems: @cart?{userId:_.id}
-  total: cartItems >+ _.price * _.quantity : 0
+    .form-group.mb-4
+      label["Email"]
+      input.input[type{"email"} $email "you@example.com"]
 
-  // Create order
-  order: {userId:_.id, total, ts:now} > @orders!
+    .form-group.mb-4
+      label["Password"]
+      input.input[type{"password"} $password "********"]
 
-  // Clear cart
-  @cart?{userId:_.id} >! @cart[_.id]!-
+    button.btn.btn-primary.w-full["Login" @click(handleLogin)]
 
-  {orderId: order.id, total} > #json
-}
+    p.text-center.mt-4.text-secondary
+      span["Don't have an account? "]
+      a["Sign up" @nav(/register)]
 ```
 
 ---
 
-## File Upload & Storage
+## Blog Post
 
-Handle file uploads and serve static files:
+Article display with comments.
 
-```cslop
-// Upload file
-*/upload + {
-  jwt?($.headers.auth) ?? #401
-  $.files.image ?? #400("no file")
+**components/BlogPost.ui:**
+```
+$post:{}
+$comments:[]
+$newComment:""
+$loading:true
 
-  filename: uuid + "." + $.files.image.ext
-  path: "uploads/" + filename
+~ fetch("/api/posts/" + $route.params.slug) > $post > $loading:false
+~ fetch("/api/posts/" + $route.params.slug + "/comments") > $comments
 
-  $.files.image > save(path)
+<?
 
-  {
-    userId: _.id,
-    filename,
-    path,
-    size: $.files.image.size,
-    ts: now
-  } > @files! > #json
-}
+.container.py-8
+  a.btn.btn-ghost.mb-4["Back to Blog" @nav(/blog)]
 
-// Get user's files
-*/files > {
-  jwt?($.headers.auth) ?? #401
-  @files?{userId:_.id} > #json
-}
+  ? $loading
+    p["Loading..."]
 
-// Download file
-*/files/:id > {
-  file: @files[$.id]
-  file ?? #404
-  #file(file.path)
-}
+  ? !$loading
+    article.card
+      h1.text-3xl.font-bold[@{$post.title}]
+      .flex.gap-2.text-secondary.mb-4
+        span["By @{$post.author}"]
+        span["|"]
+        span[@{$post.date}]
+      .prose[@{$post.content}]
 
-// Delete file
-*/files/:id - {
-  jwt?($.headers.auth) ?? #401
-  file: @files[$.id]
-  file.userId == _.id ?? #403
-  delete(file.path)
-  @files[$.id]!- > #204
-}
+    # Comments Section
+    .mt-8
+      h2.text-xl.font-bold.mb-4["Comments (@{$comments.length})"]
+
+      .flex.gap-2.mb-4
+        input.input.flex-1[$newComment "Write a comment..."]
+        button.btn.btn-primary["Post" @click(postComment)]
+
+      $comments
+        .card.mb-2
+          .flex.justify-between
+            span.font-bold[:author]
+            span.text-secondary[:date]
+          p.mt-2[:text]
 ```
 
 ---
 
-## Real-time Dashboard
+## Product Card
 
-Server-sent events for real-time updates:
+E-commerce product display.
 
-```cslop
-// Stream analytics data
-*/analytics/stream > {
-  jwt?($.headers.auth) ?? #401
+**components/ProductCard.ui:**
+```
+$quantity:1
 
-  #sse > {
-    loop: {
-      data: {
-        users: @users.count,
-        active: @sessions?{active:true}.count,
-        revenue: @orders?{ts>now-86400} >+ _.total : 0
-      }
-      #send(data)
-      sleep(5000)
+<?
+
+.card
+  img.w-full[src{$product.image} alt{$product.name}]
+  .card-body
+    .flex.justify-between.items-start
+      h3.card-title[@{$product.name}]
+      span.text-xl.font-bold["$@{$product.price}"]
+    p.text-secondary[@{$product.description}]
+    .flex.gap-2.mt-4
+      .flex.items-center.gap-2
+        button.btn.btn-sm["-" @click($quantity > 1 ? $quantity-- : null)]
+        span[@{$quantity}]
+        button.btn.btn-sm["+" @click($quantity++)]
+      button.btn.btn-primary.flex-1["Add to Cart" @click(addToCart)]
+```
+
+---
+
+## Settings Page
+
+Form with multiple inputs and theme toggle.
+
+**components/Settings.ui:**
+```
+$name:""
+$email:""
+$notifications:true
+$saved:false
+
+~ loadSettings() > {$name, $email, $notifications}
+
+<?
+
+.container.py-8
+  h1.mb-6["Settings"]
+
+  .card
+    .card-body
+      h2.card-title["Profile"]
+
+      .form-group.mb-4
+        label["Name"]
+        input.input[$name "Your name"]
+
+      .form-group.mb-4
+        label["Email"]
+        input.input[type{"email"} $email "you@example.com"]
+
+      .form-group.mb-4
+        .flex.justify-between.items-center
+          label["Email Notifications"]
+          input.toggle[type{"checkbox"}]
+
+      button.btn.btn-primary["Save Changes" @click(saveSettings)]
+
+      ? $saved
+        .alert.alert-success.mt-4["Settings saved successfully!"]
+
+  .card.mt-6
+    .card-body
+      h2.card-title["Appearance"]
+      .flex.justify-between.items-center
+        div
+          h3["Dark Mode"]
+          p.text-secondary["Toggle between light and dark theme"]
+        button.btn.btn-secondary["Toggle Theme" @click(toggleTheme)]
+```
+
+---
+
+## Navigation Header
+
+Reusable navigation component.
+
+**components/Header.ui:**
+```
+<?
+
+nav.navbar
+  .navbar-brand
+    a.font-bold.text-xl["MyApp" @nav(/)]
+
+  .navbar-menu
+    a.navbar-item["Home" @nav(/)]
+    a.navbar-item["Products" @nav(/products)]
+    a.navbar-item["About" @nav(/about)]
+
+  .flex.gap-2
+    button.btn.btn-ghost.btn-sm["Toggle Theme" @click(toggleTheme)]
+    a.btn.btn-primary.btn-sm["Sign In" @nav(/login)]
+```
+
+---
+
+## Complete App Structure
+
+A full application with all pieces together:
+
+**router.slop:**
+```
+/ > @@Home
+/products > @@ProductList
+/products/:id > @@ProductDetail
+/cart > @@Cart
+/login > @@Login
+/register > @@Register
+/settings > @@Settings
+/* > @@NotFound
+```
+
+**api.slop:**
+```
+# Health check
+*/api/health > #json({status:"ok"})
+
+# Products
+*/api/products > @products > #json
+*/api/products/:id > @products[$.id] > #json
+
+# Cart
+*/api/cart > @cart > #json
+*/api/cart + @cart!$.body > #json
+*/api/cart/:id - @cart[$.id]!- > #204
+
+# Users
+*/api/users > @users > #json
+*/api/users + @users!$.body > #json
+```
+
+**slop.json:**
+```json
+{
+  "name": "my-store",
+  "database": {
+    "type": "sqlite",
+    "connection": "./store.db"
+  },
+  "server": {
+    "port": 3000,
+    "static": "./dist"
+  },
+  "theme": {
+    "light": {
+      "primary": "#2563eb",
+      "success": "#16a34a"
+    },
+    "dark": {
+      "primary": "#3b82f6",
+      "success": "#22c55e"
     }
   }
 }
-
-// Get dashboard data
-*/dashboard > {
-  jwt?($.headers.auth) ?? #401
-
-  stats: {
-    totalUsers: @users.count,
-    activeToday: @sessions?{createdAt>now-86400}.count,
-    revenue: @orders >+ _.total : 0,
-    orders: @orders[:10].users
-  }
-
-  ~views/dashboard(stats) > #html
-}
 ```
 
 ---
 
-## Search & Pagination
+## Token Comparison
 
-Full-text search with pagination:
-
-```cslop
-// Search products
-*/search > {
-  q: $.query.q ?? ""
-  page: $.query.page ?? 0
-  limit: 20
-
-  results: @products?{name~q || desc~q}[:limit:page*limit]
-  total: @products?{name~q || desc~q}.count
-
-  {
-    results,
-    total,
-    page,
-    pages: total / limit
-  } > #json
-}
-
-// Browse with filters
-*/products > {
-  filters: {
-    category: $.query.category,
-    minPrice: $.query.min,
-    maxPrice: $.query.max
-  }
-
-  query: {
-    category: filters.category ?? _,
-    price >= filters.minPrice ?? 0,
-    price <= filters.maxPrice ?? 999999
-  }
-
-  @products?query[:20:$.query.page*20] > #json
-}
-```
-
----
-
-## Webhook Handler
-
-Process incoming webhooks:
-
-```cslop
-// Stripe webhook
-*/webhooks/stripe + {
-  // Verify signature
-  sig: $.headers["stripe-signature"]
-  verify($.body, sig, env(STRIPE_SECRET)) ?? #401
-
-  // Handle event
-  $.body.type ?
-    "payment.success": {
-      {
-        orderId: $.body.data.metadata.orderId,
-        status: "paid",
-        paidAt: now
-      } > @orders[orderId]!
-      #200
-    }
-    "payment.failed": {
-      {orderId: $.body.data.metadata.orderId, status: "failed"}
-      > @orders[orderId]!
-      #200
-    }
-    _: #200
-}
-```
-
----
-
-## Comparison: Token Count
-
-| Feature | JavaScript | C-slop | Savings |
-|---------|-----------|--------|---------|
-| Simple GET endpoint | 45 tokens | 8 tokens | 82% |
-| POST with validation | 60 tokens | 15 tokens | 75% |
-| Full CRUD API | 200 tokens | 40 tokens | 80% |
-| Auth system | 150 tokens | 35 tokens | 77% |
-| List with filter/map | 30 tokens | 10 tokens | 67% |
+| Feature | JavaScript/React | C-slop | Reduction |
+|---------|-----------------|--------|-----------|
+| Counter component | ~50 lines | ~15 lines | 70% |
+| Todo list | ~100 lines | ~30 lines | 70% |
+| API endpoint | ~10 lines | ~1 line | 90% |
+| Form with validation | ~80 lines | ~25 lines | 69% |
+| Full CRUD app | ~300 lines | ~80 lines | 73% |
 
 ---
 
 ## Next Steps
 
-- Review the [Syntax Reference](/docs/syntax) for detailed syntax
-- Learn [Database Operations](/docs/database) patterns
-- Explore [Routing](/docs/routing) best practices
-- Try the [Playground](/docs/playground) to experiment
+- Learn [Frontend Components](/docs/components) for UI development
+- Explore [SlopUI](/docs/slopui) for styling
+- Check [Client Routing](/docs/client-routing) for navigation

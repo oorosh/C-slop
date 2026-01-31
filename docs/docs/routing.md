@@ -1,8 +1,8 @@
 ---
-sidebar_position: 5
+sidebar_position: 3
 ---
 
-# Routing
+# Backend API Routes
 
 HTTP routing is a first-class feature in C-slop using the `*` symbol.
 

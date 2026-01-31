@@ -4,104 +4,166 @@ sidebar_position: 1
 
 # Getting Started
 
-Welcome to **C-slop** - a token-minimal programming language designed for web applications.
+Welcome to **C-slop** - a token-minimal full-stack framework for web applications.
 
 ## What is C-slop?
 
-C-slop is a programming language optimized for **machine efficiency** - specifically, minimizing tokens while maintaining expressiveness for common web operations: routing, database CRUD, rendering, and input processing. It achieves **75-82% token reduction** compared to JavaScript for typical web development tasks.
+C-slop provides:
 
-### Why C-slop?
+- **Backend**: Express.js API routes with database operations
+- **Frontend**: Reactive UI components with signals
+- **Routing**: Client-side SPA navigation
+- **SlopUI**: Built-in CSS component library with dark/light themes
 
-- **Token-Minimal**: Write web apps in 80% fewer tokens - perfect for AI-assisted development
-- **Symbol-Based**: Uses `@`, `$`, `#`, `>` instead of keywords
-- **Built-in Web Primitives**: Routes, database, and HTML are first-class language features
-- **Pipeline-First**: Data flows naturally through `>` operators
-- **Implicit Everything**: Types, returns, and async operations are automatically inferred
-
-## Quick Example
-
-Here's a complete REST API endpoint in C-slop:
-
-```cslop
-*/users/:id > @users[$.id] > #json
-```
-
-The equivalent in JavaScript/Express:
-
-```javascript
-app.get('/users/:id', async (req, res) => {
-  const user = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
-  res.json(user);
-});
-```
-
-**That's 8 tokens vs 47 tokens** - an 83% reduction.
-
-## Installation
+## Quick Start
 
 ```bash
-npm install -g cslop
+# Install globally
+cd compiler && npm install && npm link
+
+# Create a new project
+cslop create my-app
+cd my-app
+
+# Start dev server with hot reload
+cslop watch
 ```
 
-## Your First C-slop App
+Visit `http://localhost:3000`
 
-Create a file `app.slop`:
+## Project Structure
 
-```cslop
-// Database configuration
-@:postgres(env(DB_URL))
+```
+my-app/
+├── slop.json          # Configuration
+├── api.slop           # Backend API routes
+├── router.slop        # Frontend routing
+├── components/        # UI components
+│   ├── Home.ui
+│   └── Counter.ui
+└── dist/              # Compiled output
+    ├── index.html
+    ├── js/
+    └── css/
+```
 
-// Routes
-*/          > #html(~<h1>Hello C-slop!</h1>)
+## Backend (.slop files)
+
+```
+# REST API routes
+*/api/health > #json({status: "ok"})
+
 */api/users > @users > #json
+
+*/api/users/:id > @users[$.id] > #json
+
+*/api/users + @users!$.body > #json
+
+*/api/users/:id - @users[$.id]!- > #204
 ```
 
-Run it:
-
-```bash
-cslop run app.slop
-```
-
-Your server is now running at `http://localhost:3000`!
-
-## Core Concepts
-
-C-slop is built on a few core principles:
-
-1. **Symbols over keywords** - Single characters replace verbose keywords
-2. **Pipeline-first** - Data flows through `>` operators
-3. **Implicit everything** - The compiler infers types, returns, and async
-4. **Convention over configuration** - Sensible defaults everywhere
-5. **Built-in web primitives** - Routes, DB, HTML are part of the language
-
-## Symbol Overview
+### Backend Symbols
 
 | Symbol | Meaning | Example |
 |--------|---------|---------|
-| `*` | Route definition | `*/users` |
-| `@` | Database table | `@users` |
-| `$` | Request/Input | `$.id`, `$.body` |
-| `#` | Response/Output | `#json`, `#html` |
-| `>` | Pipe/Flow | `a > b > c` |
-| `?` | Query/Filter | `@users?{age>18}` |
-| `!` | Action/Mutation | `@users!{name:"x"}` |
-| `~` | Template/Render | `~<div>...</div>` |
-| `&` | Parallel execution | `a & b` |
-| `_` | Current context | `_.name` |
+| `*` | Route | `*/api/users` |
+| `+` | POST | `*/users +` |
+| `^` | PUT | `*/users/:id ^` |
+| `-` | DELETE | `*/users/:id -` |
+| `@` | Database | `@users` |
+| `$` | Request | `$.body`, `$.id` |
+| `#` | Response | `#json`, `#201` |
+| `>` | Pipeline | `@users > #json` |
+
+## Frontend (.ui files)
+
+```
+# Counter.ui - Reactive component
+$count:0
+
+<?
+
+.container.text-center.py-8
+  h1["Count: @{$count}"]
+  .flex.gap-2.justify-center
+    button.btn.btn-secondary["-" @click($count--)]
+    button.btn.btn-primary["+" @click($count++)]
+```
+
+### Frontend Features
+
+- **State**: `$count:0` - Reactive signals
+- **Computed**: `$doubled := $count * 2` - Derived values
+- **Effects**: `~ fetch("/api") > $data` - Side effects
+- **Events**: `@click($count++)`, `@nav(/path)`
+- **Attributes**: `src{$url}`, `alt{"text"}`
+
+## Routing (router.slop)
+
+```
+# Client-side SPA routing
+/ > @@Home
+/counter > @@Counter
+/users/:id > @@UserDetail
+```
+
+### Navigation
+
+```
+a["Go to Counter" @nav(/counter)]
+button["Back" @nav(/)]
+```
+
+## SlopUI
+
+Built-in CSS library with dark/light theme support:
+
+```
+button.btn.btn-primary["Primary"]
+button.btn.btn-secondary["Secondary"]
+.card
+  h3.card-title["Title"]
+  p["Content"]
+.alert.alert-success["Success!"]
+```
+
+Toggle theme:
+```
+button["Toggle Theme" @click(toggleTheme)]
+```
+
+## Commands
+
+```bash
+cslop create <name>    # Create new project
+cslop watch            # Dev server + hot reload
+cslop start            # Production server
+cslop <file.slop>      # Run a .slop file
+cslop build <file>     # Compile to JS
+```
+
+## Configuration (slop.json)
+
+```json
+{
+  "name": "my-app",
+  "database": {
+    "type": "memory"
+  },
+  "server": {
+    "port": 3000,
+    "static": "./dist"
+  },
+  "theme": {
+    "light": { "primary": "#3b82f6" },
+    "dark": { "primary": "#60a5fa" }
+  }
+}
+```
 
 ## Next Steps
 
-- Learn the [Syntax Reference](/docs/syntax) for complete language details
-- Browse [Examples](/docs/examples) to see C-slop in action
-- Explore [Database Operations](/docs/database) for data handling
-- Check out [Routing](/docs/routing) for HTTP endpoint patterns
-
-## Philosophy
-
-C-slop is designed for the AI era. When working with LLMs like Claude or GPT-4, token count directly impacts:
-- Context window usage
-- API costs
-- Response time
-- Code comprehension
-
-By reducing boilerplate to the absolute minimum, C-slop lets you build more with less.
+- Learn [Frontend Components](/docs/components) for UI development
+- Explore [SlopUI](/docs/slopui) for styling
+- Check [Routing](/docs/client-routing) for navigation
+- Browse [Examples](/docs/examples) for complete apps
