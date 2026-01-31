@@ -295,11 +295,31 @@ function createRuntime(options = {}) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // CORS for development
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
+  // Load config first to check for static files
+  const config = loadConfig(options.basePath || process.cwd());
+
+  // Serve static files if configured
+  if (config && config.server && config.server.static) {
+    const staticPath = path.resolve(options.basePath || process.cwd(), config.server.static);
+    app.use(express.static(staticPath));
+    console.log(`✓ Serving static files from: ${staticPath}`);
+  }
+
   // Database
   const database = new Database();
 
-  // Load config and auto-connect database
-  const config = loadConfig(options.basePath || process.cwd());
+  // Auto-connect database from config
   if (config && config.database) {
     database.connect(config.database.type, config.database.connection);
   }

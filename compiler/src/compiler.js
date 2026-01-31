@@ -23,8 +23,8 @@ class Compiler {
     for (let i = 0; i < this.lines.length; i++) {
       const line = this.lines[i].trim();
 
-      // Skip empty lines and comments
-      if (!line || line.startsWith('//')) continue;
+      // Skip empty lines and comments (// or #)
+      if (!line || line.startsWith('//') || line.startsWith('#')) continue;
 
       // Handle imports
       if (line.startsWith('import ')) {

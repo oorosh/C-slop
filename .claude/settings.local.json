@@ -14,7 +14,11 @@
       "Bash(cd /Users/bogdanchayka/Projects/C-slop/compiler && npm install:*)",
       "Bash(npm link)",
       "Bash(cslop build:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(pkill:*)",
+      "Bash(node cli.js:*)",
+      "Bash(curl:*)"
     ]
   }
 }

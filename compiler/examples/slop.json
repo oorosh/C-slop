@@ -1,0 +1,11 @@
+{
+  "database": {
+    "type": "sqlite",
+    "connection": "./users.db"
+  },
+  "server": {
+    "port": 3000,
+    "host": "localhost",
+    "static": "./public"
+  }
+}

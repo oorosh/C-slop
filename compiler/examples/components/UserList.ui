@@ -1,0 +1,29 @@
+# UserList.ui - User list with database
+
+$users:[]
+$name:""
+$surname:""
+$email:""
+$loading:true
+
+# Load users on mount
+~ fetch("/api/users") > $users > $loading:false
+
+.container
+  h1["User Management"]
+
+  .form
+    input[$name "Name"]
+    input[$email "Email"]
+    input[$surname "Surname"]
+    button["Add User" @ post:/api/users {name:$name,email:$email} > $users + clear]
+
+  ? $loading
+    p["Loading..."]
+
+  $users
+    .card
+      .user-info
+        h3[:name]
+        p[:email]
+      button.delete["Delete" @ delete:/api/users/:id > $users - :id]

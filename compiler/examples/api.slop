@@ -1,0 +1,10 @@
+# api.slop - User API with database
+
+# GET all users
+*/api/users > @users > #json
+
+# POST new user
+*/api/users + @users!$.body > #json
+
+# DELETE user by id
+*/api/users/:id - @users[$.id]!- > #json

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C-slop Frontend Demo</title>
+
+  <!-- Component styles -->
+  <link rel="stylesheet" href="/css/Counter.css">
+  <link rel="stylesheet" href="/css/UserList.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin: 4px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #f0f0f0;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .warning {
+      color: orange;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .card {
+      padding: 16px;
+      margin: 12px 0;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .card h3 {
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: #666;
+    }
+
+    input {
+      padding: 8px 12px;
+      margin: 4px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      min-width: 200px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    .form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .delete {
+      background: #f44336;
+      color: white;
+      border-color: #f44336;
+    }
+
+    .delete:hover {
+      background: #da190b;
+    }
+
+    .card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  </style>
+
+<script>
+(function() {
+  const ws = new WebSocket('ws://localhost:35729');
+  ws.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (data.type === 'reload') {
+      console.log('[C-slop] Reloading...', data.file);
+      location.reload();
+    } else if (data.type === 'css') {
+      console.log('[C-slop] CSS updated:', data.file);
+      document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+        link.href = link.href.split('?')[0] + '?t=' + Date.now();
+      });
+    }
+  };
+  ws.onopen = () => console.log('[C-slop] Hot reload connected');
+  ws.onclose = () => console.log('[C-slop] Hot reload disconnected, retrying...');
+})();
+</script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { mount } from '/js/dom.js';
+    import { Counter } from '/js/Counter.js';
+    import { UserList } from '/js/UserList.js';
+
+    // Mount UserList component (change to Counter if needed)
+    mount(UserList, document.getElementById('app'));
+  </script>
+</body>
+</html>
