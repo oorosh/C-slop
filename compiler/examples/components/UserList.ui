@@ -11,7 +11,9 @@ $loading:true
 .container
   h1["User Management"]
 
-  .form
+  div["Name: @{$name}"]
+
+  form.form
     input[$name "Name"]
     input[$email "Email"]
     button["Add User" @ post:/api/users {name:$name,email:$email} > $users + clear]

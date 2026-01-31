@@ -210,6 +210,18 @@ export class CodeGenerator {
       return `${element.name}.value`;
     }
 
+    if (element.type === 'StaticInterpolation') {
+      // Static interpolation: {$var} - just get .value once
+      const expr = element.expression.replace(/\$(\w+)/g, '$$$1.value');
+      return expr;
+    }
+
+    if (element.type === 'ReactiveInterpolation') {
+      // Reactive interpolation: @{$var} - create reactive text node
+      // Return the signal object itself, will be handled in h() function
+      return element.expression;
+    }
+
     if (element.type === 'PropertyAccess') {
       return inLoop ? `item.${element.property}` : `"${element.property}"`;
     }

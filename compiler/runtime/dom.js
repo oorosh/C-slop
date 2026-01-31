@@ -44,8 +44,16 @@ export function h(tag, props, children) {
       } else if (child instanceof Node) {
         el.appendChild(child);
       } else if (child.value !== undefined) {
-        // Handle signals
-        el.appendChild(document.createTextNode(String(child.value)));
+        // Handle signals - create reactive text node
+        const textNode = document.createTextNode(String(child.value));
+        el.appendChild(textNode);
+
+        // Subscribe to changes if it's a signal
+        if (typeof child.subscribe === 'function') {
+          child.subscribe(() => {
+            textNode.textContent = String(child.value);
+          });
+        }
       }
     });
   }

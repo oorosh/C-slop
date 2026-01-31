@@ -155,48 +155,139 @@ export class Parser {
 
   parseInlineContent(content) {
     const children = [];
-    const parts = content.split(/(\$\w+|:\w+|@[^"]*)/);
+    // Parse content piece by piece, handling quoted strings specially
+    let i = 0;
 
-    for (let part of parts) {
-      part = part.trim();
-      if (!part) continue;
+    while (i < content.length) {
+      // Skip whitespace
+      while (i < content.length && /\s/.test(content[i])) i++;
+      if (i >= content.length) break;
 
-      // Property access
-      if (part.startsWith(':')) {
-        children.push({
-          type: 'PropertyAccess',
-          property: part.substring(1)
-        });
+      // Handle quoted strings - these may contain interpolations
+      if (content[i] === '"') {
+        const start = i + 1;
+        i++;
+        while (i < content.length && content[i] !== '"') i++;
+        const text = content.substring(start, i);
+        i++; // Skip closing quote
+
+        // Parse interpolations inside the quoted string
+        children.push(...this.parseTextWithInterpolations(text));
+        continue;
       }
-      // Variable reference (could be binding or just reference)
-      else if (part.startsWith('$')) {
-        children.push({
-          type: 'Variable',
-          name: part
-        });
+
+      // Handle variable references: $name
+      if (content[i] === '$') {
+        const match = content.substring(i).match(/^\$\w+/);
+        if (match) {
+          children.push({
+            type: 'Variable',
+            name: match[0]
+          });
+          i += match[0].length;
+          continue;
+        }
       }
-      // Event handler or action
-      else if (part.startsWith('@')) {
-        const action = part.substring(1).trim();
+
+      // Handle property access: :name
+      if (content[i] === ':') {
+        const match = content.substring(i).match(/^:\w+/);
+        if (match) {
+          children.push({
+            type: 'PropertyAccess',
+            property: match[0].substring(1)
+          });
+          i += match[0].length;
+          continue;
+        }
+      }
+
+      // Handle event handlers: @ (but not @{...})
+      if (content[i] === '@' && content[i + 1] !== '{') {
+        // Find the action - everything from @ to the end (or until next space/quote)
+        let start = i + 1;
+        let end = start;
+        let depth = 0;
+        while (end < content.length) {
+          if (content[end] === '{') depth++;
+          else if (content[end] === '}') depth--;
+          else if (depth === 0 && (content[end] === '"' || (content[end] === ' ' && content[end + 1] === '"'))) break;
+          end++;
+        }
+
+        const action = content.substring(start, end).trim();
         children.push({
           type: 'Event',
           action
         });
+        i = end;
+        continue;
       }
-      // String literal
-      else if (part.startsWith('"')) {
+
+      // If we got here, move forward
+      i++;
+    }
+
+    return children;
+  }
+
+  parseTextWithInterpolations(text) {
+    const children = [];
+    // Match @{...} (reactive) and {...} (static) interpolations
+    const regex = /(@\{[^}]+\}|\{[^}]+\})/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before interpolation
+      if (match.index > lastIndex) {
+        const beforeText = text.substring(lastIndex, match.index);
+        if (beforeText) {
+          children.push({
+            type: 'Text',
+            value: beforeText
+          });
+        }
+      }
+
+      // Parse interpolation
+      const interpolation = match[0];
+      if (interpolation.startsWith('@{')) {
+        // Reactive interpolation: @{$name}
+        const expr = interpolation.slice(2, -1).trim();
         children.push({
-          type: 'Text',
-          value: part.slice(1, -1)
+          type: 'ReactiveInterpolation',
+          expression: expr
+        });
+      } else {
+        // Static interpolation: {$name}
+        const expr = interpolation.slice(1, -1).trim();
+        children.push({
+          type: 'StaticInterpolation',
+          expression: expr
         });
       }
-      // Plain text
-      else if (part) {
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      const remainingText = text.substring(lastIndex);
+      if (remainingText) {
         children.push({
           type: 'Text',
-          value: part
+          value: remainingText
         });
       }
+    }
+
+    // If no interpolations found, return plain text
+    if (children.length === 0) {
+      children.push({
+        type: 'Text',
+        value: text
+      });
     }
 
     return children;
