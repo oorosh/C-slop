@@ -3,7 +3,7 @@
 $count:0
 
 .counter
-  h1["Count: " $count]
+  h1["Count:  @{$count}"]
   .buttons
     button["-" @ $count--]
     button["Reset" @ $count:0]
