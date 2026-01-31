@@ -243,7 +243,7 @@ function CTASection() {
           </Link>
           <Link
             className="button button--secondary button--lg"
-            href="https://github.com/c-slop/c-slop">
+            href="https://github.com/bigboggy/C-slop">
             View on GitHub
           </Link>
         </div>

@@ -219,5 +219,5 @@ Check out the `compiler/test/` directory for more examples:
 
 ## Getting Help
 
-- File issues at: https://github.com/c-slop/c-slop/issues
+- File issues at: https://github.com/bigboggy/C-slop/issues
 - Read docs at: https://c-slop.dev

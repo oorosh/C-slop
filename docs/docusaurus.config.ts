@@ -30,7 +30,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/c-slop/c-slop/tree/main/docs/',
+          editUrl: 'https://github.com/bigboggy/C-slop/tree/main/docs/',
         },
         blog: false,
         theme: {
@@ -70,7 +70,7 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://github.com/c-slop/c-slop',
+          href: 'https://github.com/bigboggy/C-slop',
           label: 'GitHub',
           position: 'right',
         },
@@ -114,11 +114,11 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/c-slop/c-slop',
+              href: 'https://github.com/bigboggy/C-slop',
             },
             {
               label: 'Releases',
-              href: 'https://github.com/c-slop/c-slop/releases',
+              href: 'https://github.com/bigboggy/C-slop/releases',
             },
           ],
         },

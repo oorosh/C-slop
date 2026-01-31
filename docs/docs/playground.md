@@ -262,12 +262,12 @@ cslop load app.slop --requests 10000 --concurrent 100
 
 ## Get Help
 
-- [GitHub Issues](https://github.com/c-slop/c-slop/issues)
+- [GitHub Issues](https://github.com/bigboggy/C-slop/issues)
 - [Discord Community](https://discord.gg/c-slop)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/cslop)
 
 ## Contributing
 
 Want to contribute? Check out:
-- [Contributing Guide](https://github.com/c-slop/c-slop/blob/main/CONTRIBUTING.md)
-- [Good First Issues](https://github.com/c-slop/c-slop/labels/good-first-issue)
+- [Contributing Guide](https://github.com/bigboggy/C-slop/blob/main/CONTRIBUTING.md)
+- [Good First Issues](https://github.com/bigboggy/C-slop/labels/good-first-issue)

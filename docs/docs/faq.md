@@ -468,13 +468,13 @@ Configure in VS Code settings:
 
 ### Community
 
-- [GitHub Discussions](https://github.com/c-slop/c-slop/discussions)
+- [GitHub Discussions](https://github.com/bigboggy/C-slop/discussions)
 - [Discord](https://discord.gg/c-slop)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/cslop)
 
 ### Bug Reports
 
-File issues at: [github.com/c-slop/c-slop/issues](https://github.com/c-slop/c-slop/issues)
+File issues at: [github.com/c-slop/c-slop/issues](https://github.com/bigboggy/C-slop/issues)
 
 Include:
 - C-slop version (`cslop --version`)
@@ -487,9 +487,9 @@ Include:
 
 Want to help improve C-slop?
 
-- [Contributing Guide](https://github.com/c-slop/c-slop/blob/main/CONTRIBUTING.md)
-- [Good First Issues](https://github.com/c-slop/c-slop/labels/good-first-issue)
-- [Roadmap](https://github.com/c-slop/c-slop/blob/main/ROADMAP.md)
+- [Contributing Guide](https://github.com/bigboggy/C-slop/blob/main/CONTRIBUTING.md)
+- [Good First Issues](https://github.com/bigboggy/C-slop/labels/good-first-issue)
+- [Roadmap](https://github.com/bigboggy/C-slop/blob/main/ROADMAP.md)
 
 ## Still Stuck?
 
@@ -497,6 +497,6 @@ If your question isn't answered here:
 
 1. Check the [Syntax Reference](/docs/syntax) for complete language details
 2. Browse [Examples](/docs/examples) for similar use cases
-3. Search [GitHub Issues](https://github.com/c-slop/c-slop/issues)
+3. Search [GitHub Issues](https://github.com/bigboggy/C-slop/issues)
 4. Ask on [Discord](https://discord.gg/c-slop)
-5. Open a [new issue](https://github.com/c-slop/c-slop/issues/new)
+5. Open a [new issue](https://github.com/bigboggy/C-slop/issues/new)
