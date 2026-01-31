@@ -19,6 +19,7 @@ dist/
 *.swp
 *.swo
 *~
+.claude
 
 # OS files
 Thumbs.db

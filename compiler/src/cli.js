@@ -50,6 +50,38 @@ function compileFrontend(componentsDir, outputDir, projectRoot) {
 
           const compiled = [];
 
+          // Copy SlopUI CSS files
+          const slopuiDir = path.join(__dirname, '..', 'slopui');
+          const baseCSS = path.join(slopuiDir, 'base.css');
+          const componentsCSS = path.join(slopuiDir, 'components.css');
+
+          if (fs.existsSync(baseCSS) && fs.existsSync(componentsCSS)) {
+            const baseCSSContent = fs.readFileSync(baseCSS, 'utf8');
+            const componentsCSSContent = fs.readFileSync(componentsCSS, 'utf8');
+
+            // Combine into single slopui.css
+            const slopuiCSS = `${baseCSSContent}\n\n${componentsCSSContent}`;
+            fs.writeFileSync(path.join(cssDir, 'slopui.css'), slopuiCSS);
+            compiled.push('slopui');
+          }
+
+          // Generate theme CSS from slop.json config
+          const configRoot = projectRoot || componentsDir.replace('/components', '');
+          const configPath = path.join(configRoot, 'slop.json');
+          if (fs.existsSync(configPath)) {
+            try {
+              const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              if (config.theme) {
+                const { generateThemeCSS } = require(path.join(slopuiDir, 'theme.js'));
+                const themeCSS = generateThemeCSS(config.theme);
+                fs.writeFileSync(path.join(cssDir, 'theme.css'), themeCSS);
+                compiled.push('theme');
+              }
+            } catch (err) {
+              console.warn('  Warning: Could not generate theme CSS:', err.message);
+            }
+          }
+
           // Get .ui files
           if (fs.existsSync(componentsDir)) {
             const files = fs.readdirSync(componentsDir).filter(f => f.endsWith('.ui'));
@@ -427,6 +459,39 @@ try {
 
   // Initial compile
   async function initialCompile() {
+    // Ensure CSS directory exists
+    const cssDir = path.join(publicDir, 'css');
+    fs.mkdirSync(cssDir, { recursive: true });
+
+    // Copy SlopUI CSS files
+    const slopuiDir = path.join(__dirname, '..', 'slopui');
+    const baseCSS = path.join(slopuiDir, 'base.css');
+    const componentsCSS = path.join(slopuiDir, 'components.css');
+
+    if (fs.existsSync(baseCSS) && fs.existsSync(componentsCSS)) {
+      const baseCSSContent = fs.readFileSync(baseCSS, 'utf8');
+      const componentsCSSContent = fs.readFileSync(componentsCSS, 'utf8');
+      const slopuiCSS = `${baseCSSContent}\n\n${componentsCSSContent}`;
+      fs.writeFileSync(path.join(cssDir, 'slopui.css'), slopuiCSS);
+      console.log('  \x1b[32m✓\x1b[0m slopui.css');
+    }
+
+    // Generate theme CSS from slop.json config
+    const configPath = path.join(cwd, 'slop.json');
+    if (fs.existsSync(configPath)) {
+      try {
+        const projectConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (projectConfig.theme) {
+          const { generateThemeCSS } = require(path.join(slopuiDir, 'theme.js'));
+          const themeCSS = generateThemeCSS(projectConfig.theme);
+          fs.writeFileSync(path.join(cssDir, 'theme.css'), themeCSS);
+          console.log('  \x1b[32m✓\x1b[0m theme.css');
+        }
+      } catch (err) {
+        console.log(`  \x1b[33m⚠\x1b[0m theme.css: ${err.message}`);
+      }
+    }
+
     if (fs.existsSync(componentsDir)) {
       console.log('  Compiling frontend components...');
       const files = fs.readdirSync(componentsDir).filter(f => f.endsWith('.ui'));
@@ -563,6 +628,20 @@ try {
     server: {
       port: 3000,
       static: './dist'
+    },
+    theme: {
+      light: {
+        primary: '#3b82f6',
+        success: '#22c55e',
+        warning: '#f59e0b',
+        error: '#ef4444'
+      },
+      dark: {
+        primary: '#60a5fa',
+        success: '#4ade80',
+        warning: '#fbbf24',
+        error: '#f87171'
+      }
     }
   };
   fs.writeFileSync(
@@ -601,11 +680,12 @@ try {
 
 <?
 
-.home
+.container.text-center.py-8
   h1["Welcome to ${projectName}"]
-  p["A C-slop application with client-side routing"]
-  .nav
-    a["Go to Counter" @nav(/counter)]
+  p.text-secondary["A C-slop application with SlopUI"]
+  .flex.gap-4.justify-center.mt-6
+    a.btn.btn-primary["Go to Counter" @nav(/counter)]
+    button.btn.btn-secondary["Toggle Theme" @click(toggleTheme)]
 `;
   fs.writeFileSync(path.join(projectPath, 'components', 'Home.ui'), homeUi);
   console.log('  \x1b[32m✓\x1b[0m components/Home.ui');
@@ -617,64 +697,48 @@ $count:0
 
 <?
 
-.counter
-  h1["Count: @{$count}"]
-  .buttons
-    button["-" @click($count--)]
-    button["Reset" @click($count:0)]
-    button["+" @click($count++)]
-  .nav
-    a["Back to Home" @nav(/)]
+.container.text-center.py-8
+  .card.mx-auto
+    h1["Count: @{$count}"]
+    .flex.gap-2.justify-center.mt-4
+      button.btn.btn-secondary["-" @click($count--)]
+      button.btn.btn-outline["Reset" @click($count:0)]
+      button.btn.btn-primary["+" @click($count++)]
+  .mt-6
+    a.btn.btn-ghost["Back to Home" @nav(/)]
 `;
   fs.writeFileSync(path.join(projectPath, 'components', 'Counter.ui'), counterUi);
   console.log('  \x1b[32m✓\x1b[0m components/Counter.ui');
 
   // Template: dist/index.html
   const indexHtml = `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${projectName}</title>
+  <!-- SlopUI CSS -->
+  <link rel="stylesheet" href="/css/slopui.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <!-- Component CSS -->
   <link rel="stylesheet" href="/css/Home.css">
   <link rel="stylesheet" href="/css/Counter.css">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      padding: 2rem;
-      background: #1a1a1a;
-      color: #fff;
-      min-height: 100vh;
-    }
-    h1 { margin-bottom: 1rem; }
-    p { margin-bottom: 1rem; color: #aaa; }
-    a {
-      color: #6af;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    a:hover { text-decoration: underline; }
-    button {
-      padding: 0.5rem 1rem;
-      margin: 0.25rem;
-      border: none;
-      border-radius: 4px;
-      background: #333;
-      color: #fff;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    button:hover { background: #444; }
-    button:active { transform: scale(0.98); }
-    .home { text-align: center; margin-top: 2rem; }
-    .counter { text-align: center; margin-top: 2rem; }
-    .buttons { margin-top: 1rem; }
-    .nav { margin-top: 2rem; }
-  </style>
 </head>
 <body>
   <div id="app"></div>
+  <script>
+    // Theme toggle function (available globally)
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+      localStorage.setItem('theme', html.getAttribute('data-theme'));
+    }
+
+    // Apply saved theme on load
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
   <script type="module">
     import { createRouter } from '/js/router-config.js';
     createRouter(document.getElementById('app'));
@@ -696,6 +760,25 @@ $count:0
       console.log(`  \x1b[32m✓\x1b[0m dist/js/${file}`);
     }
   }
+
+  // Copy SlopUI CSS files
+  const slopuiDir = path.join(__dirname, '..', 'slopui');
+  const baseCSS = path.join(slopuiDir, 'base.css');
+  const componentsCSS = path.join(slopuiDir, 'components.css');
+
+  if (fs.existsSync(baseCSS) && fs.existsSync(componentsCSS)) {
+    const baseCSSContent = fs.readFileSync(baseCSS, 'utf8');
+    const componentsCSSContent = fs.readFileSync(componentsCSS, 'utf8');
+    const slopuiCSS = `${baseCSSContent}\n\n${componentsCSSContent}`;
+    fs.writeFileSync(path.join(projectPath, 'dist', 'css', 'slopui.css'), slopuiCSS);
+    console.log('  \x1b[32m✓\x1b[0m dist/css/slopui.css');
+  }
+
+  // Generate theme CSS from config
+  const { generateThemeCSS } = require(path.join(slopuiDir, 'theme.js'));
+  const themeCSS = generateThemeCSS(slopJson.theme);
+  fs.writeFileSync(path.join(projectPath, 'dist', 'css', 'theme.css'), themeCSS);
+  console.log('  \x1b[32m✓\x1b[0m dist/css/theme.css');
 
   // Create reference.md
   const referenceMd = `# C-slop Reference
@@ -955,14 +1038,151 @@ h1["User: @{$route.params.id}"]
 {
   "name": "my-app",
   "database": {
-    "type": "memory"       // or "sqlite"
-    "connection": "./app.db"  // for sqlite
+    "type": "memory",
+    "connection": "./app.db"
   },
   "server": {
     "port": 3000,
     "static": "./dist"
+  },
+  "theme": {
+    "light": {
+      "primary": "#3b82f6",
+      "success": "#22c55e",
+      "warning": "#f59e0b",
+      "error": "#ef4444"
+    },
+    "dark": {
+      "primary": "#60a5fa",
+      "success": "#4ade80",
+      "warning": "#fbbf24",
+      "error": "#f87171"
+    }
   }
 }
+\`\`\`
+
+---
+
+## SlopUI (CSS Library)
+
+SlopUI is included automatically. Just use the classes in your components.
+
+### Theme Toggle
+
+\`\`\`javascript
+// Built-in toggleTheme() function
+button["Toggle Theme" @click(toggleTheme)]
+\`\`\`
+
+Theme is stored in localStorage and persists across page loads.
+
+### Buttons
+
+\`\`\`
+button.btn["Default"]
+button.btn.btn-primary["Primary"]
+button.btn.btn-secondary["Secondary"]
+button.btn.btn-success["Success"]
+button.btn.btn-warning["Warning"]
+button.btn.btn-error["Error"]
+button.btn.btn-ghost["Ghost"]
+button.btn.btn-outline["Outline"]
+button.btn.btn-sm["Small"]
+button.btn.btn-lg["Large"]
+\`\`\`
+
+### Cards
+
+\`\`\`
+.card
+  .card-header
+    h3.card-title["Title"]
+  .card-body
+    p["Content"]
+  .card-footer
+    button.btn["Action"]
+\`\`\`
+
+### Inputs
+
+\`\`\`
+input.input["placeholder"]
+input.input.input-error["with error"]
+textarea.textarea["message"]
+select.select
+  option["Option 1"]
+\`\`\`
+
+### Badges & Alerts
+
+\`\`\`
+span.badge["Default"]
+span.badge.badge-primary["Primary"]
+span.badge.badge-success["Success"]
+
+.alert.alert-info["Information message"]
+.alert.alert-success["Success message"]
+.alert.alert-warning["Warning message"]
+.alert.alert-error["Error message"]
+\`\`\`
+
+### Layout Utilities
+
+\`\`\`
+# Containers
+.container              # Max 1200px centered
+.container-sm           # Max 640px
+.container-md           # Max 768px
+
+# Flexbox
+.flex                   # display: flex
+.flex-col               # flex-direction: column
+.items-center           # align-items: center
+.justify-center         # justify-content: center
+.justify-between        # justify-content: space-between
+.gap-2                  # gap: 0.5rem
+.gap-4                  # gap: 1rem
+
+# Spacing
+.p-4                    # padding: 1rem
+.px-4                   # padding-left/right: 1rem
+.py-4                   # padding-top/bottom: 1rem
+.m-4                    # margin: 1rem
+.mt-4                   # margin-top: 1rem
+.mx-auto                # margin-left/right: auto
+
+# Text
+.text-center            # text-align: center
+.text-primary           # color: var(--primary)
+.text-secondary         # color: var(--text-secondary)
+.text-sm                # font-size: 0.875rem
+.font-bold              # font-weight: 700
+\`\`\`
+
+### Tables
+
+\`\`\`
+table.table
+  thead
+    tr
+      th["Name"]
+      th["Email"]
+  tbody
+    tr
+      td["John"]
+      td["john@example.com"]
+\`\`\`
+
+### Navbar
+
+\`\`\`
+nav.navbar
+  .navbar-brand
+    a["My App"]
+  .navbar-menu
+    a.navbar-item["Home" @nav(/)]
+    a.navbar-item["About" @nav(/about)]
 \`\`\`
 
 ---
@@ -1023,6 +1243,7 @@ $loading:true
 
   // Create .gitignore
   const gitignore = `node_modules/
+dist/
 *.db
 .DS_Store
 `;

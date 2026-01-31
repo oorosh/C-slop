@@ -26,6 +26,34 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
   - `createRouter(target)`: Initialize router with target element
   - Path matching with dynamic segments (`:id`)
 
+### SlopUI (CSS Library)
+- **slopui/base.css**: CSS reset, theme variables, layout utilities
+  - CSS reset (box-sizing, margin, padding)
+  - Light/dark theme CSS variables
+  - Typography styles (headings, paragraphs, code)
+  - Layout utilities (flex, grid, spacing, text)
+
+- **slopui/components.css**: Component styles
+  - Buttons (`.btn`, `.btn-primary`, `.btn-secondary`, etc.)
+  - Cards (`.card`, `.card-header`, `.card-body`)
+  - Inputs (`.input`, `.textarea`, `.select`, `.checkbox`)
+  - Alerts (`.alert`, `.alert-success`, `.alert-error`)
+  - Badges (`.badge`, `.badge-primary`)
+  - Tables (`.table`)
+  - Navbar (`.navbar`, `.navbar-brand`, `.navbar-menu`)
+  - Tabs (`.tabs`, `.tab-active`)
+  - Modals (`.modal`)
+  - Progress (`.progress`)
+  - Tooltips (`.tooltip`)
+  - Toggle (`.toggle`)
+  - Dropdowns (`.dropdown`)
+  - Breadcrumbs (`.breadcrumb`)
+
+- **slopui/theme.js**: Theme generator
+  - Reads theme config from `slop.json`
+  - Generates CSS variables for light/dark themes
+  - Auto-generates hover/active color variants
+
 ### Parser (frontend/parser.js)
 **State Declarations:**
 - ✅ Simple state: `$count:0`
@@ -136,11 +164,14 @@ The frontend compiler takes `.ui` component files and compiles them to vanilla J
 - ❌ Filters: `{$date | format}`
 
 ### CSS Features
+- ✅ CSS variable integration (SlopUI theme system)
+- ✅ Light/dark theme support
+- ✅ Utility classes (flex, spacing, text)
+- ✅ Component styles (buttons, cards, inputs, etc.)
 - ❌ Nested selectors
-- ❌ Pseudo-class support
-- ❌ CSS variable integration
-- ❌ Animation/transition helpers
-- ❌ Responsive utilities
+- ❌ Pseudo-class support in .ui files
+- ❌ Animation/transition helpers (basic transitions in SlopUI)
+- ❌ Responsive utilities (media queries)
 
 ### Tooling
 - ✅ Watch mode: `cslop watch` with hot reload
@@ -284,15 +315,18 @@ The mount function wraps the render in an effect, so it re-runs when any signal 
 - [x] Watch mode with hot reload
 - [x] Project scaffolding
 
-**Phase 2 (Current):**
+**Phase 2 (Complete):**
 - [x] Client-side routing (router.slop)
-- [x] Navigation syntax (@ nav /path)
+- [x] Navigation syntax (@nav(/path))
 - [x] Route params ($route.params)
+- [x] SPA fallback route (serves index.html for non-API routes)
+- [x] SlopUI CSS library (base + components)
+- [x] Theme system (light/dark with slop.json config)
+- [x] Theme toggle function (toggleTheme())
+
+**Phase 3 (Current):**
 - [ ] All syntax features implemented
 - [ ] Style shorthands work
 - [ ] Two-way binding functional
-
-**Phase 3 (Next):**
-- [ ] Catch-all route for SPA
 - [ ] Error boundaries
 - [ ] SSR/Hydration

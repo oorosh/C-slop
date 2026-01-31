@@ -166,11 +166,81 @@ button["Go" @nav(/path)]
   "server": {
     "port": 3000,
     "static": "./dist"
+  },
+  "theme": {
+    "light": {
+      "primary": "#3b82f6",
+      "success": "#22c55e"
+    },
+    "dark": {
+      "primary": "#60a5fa",
+      "success": "#4ade80"
+    }
   }
 }
 ```
 
 Database types: `memory`, `sqlite`
+
+## SlopUI (CSS Library)
+
+SlopUI is a built-in CSS library similar to DaisyUI. It's included automatically in new projects.
+
+### Theme Support
+
+Dark/light mode with automatic persistence:
+
+```
+button["Toggle Theme" @click(toggleTheme)]
+```
+
+### Components
+
+```
+# Buttons
+button.btn.btn-primary["Primary"]
+button.btn.btn-secondary["Secondary"]
+button.btn.btn-success["Success"]
+button.btn.btn-ghost["Ghost"]
+button.btn.btn-outline["Outline"]
+
+# Cards
+.card
+  h3.card-title["Title"]
+  .card-body
+    p["Content"]
+
+# Inputs
+input.input["Placeholder"]
+textarea.textarea["Message"]
+select.select
+
+# Alerts
+.alert.alert-info["Info message"]
+.alert.alert-success["Success!"]
+.alert.alert-error["Error!"]
+
+# Badges
+span.badge.badge-primary["New"]
+span.badge.badge-success["Active"]
+```
+
+### Layout Utilities
+
+```
+# Flexbox
+.flex .flex-col .items-center .justify-center .justify-between
+.gap-2 .gap-4 .gap-6
+
+# Spacing
+.p-4 .px-4 .py-4 .m-4 .mt-4 .mx-auto
+
+# Text
+.text-center .text-primary .text-secondary .text-sm .font-bold
+
+# Containers
+.container .container-sm .container-md
+```
 
 ## Architecture
 
@@ -185,10 +255,14 @@ compiler/
 │   ├── codegen.js    # JS generator
 │   ├── router-parser.js    # router.slop parser
 │   └── router-codegen.js   # Router generator
-└── runtime/
-    ├── signals.js    # Reactive signals (~1.5KB)
-    ├── dom.js        # DOM helpers (~1KB)
-    └── router.js     # Client-side router
+├── runtime/
+│   ├── signals.js    # Reactive signals (~1.5KB)
+│   ├── dom.js        # DOM helpers (~1KB)
+│   └── router.js     # Client-side router
+└── slopui/
+    ├── base.css      # CSS reset & utilities
+    ├── components.css # Component styles
+    └── theme.js      # Theme generator
 ```
 
 ## Development

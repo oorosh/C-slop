@@ -3,6 +3,51 @@
  * Generates JavaScript and CSS from AST
  */
 
+// SlopUI utility classes that should NOT be scoped
+const UTILITY_CLASS_PREFIXES = [
+  // Buttons
+  'btn',
+  // Cards
+  'card',
+  // Inputs
+  'input', 'textarea', 'select', 'checkbox', 'radio', 'toggle',
+  // Alerts & Badges
+  'alert', 'badge',
+  // Layout
+  'container', 'flex', 'grid', 'items-', 'justify-', 'gap-', 'col-', 'row-',
+  // Spacing
+  'p-', 'px-', 'py-', 'pt-', 'pb-', 'pl-', 'pr-',
+  'm-', 'mx-', 'my-', 'mt-', 'mb-', 'ml-', 'mr-',
+  // Text
+  'text-', 'font-', 'leading-', 'tracking-',
+  // Sizing
+  'w-', 'h-', 'min-', 'max-',
+  // Display
+  'hidden', 'block', 'inline', 'relative', 'absolute', 'fixed', 'sticky',
+  // Tables
+  'table',
+  // Navigation
+  'navbar', 'nav-', 'breadcrumb',
+  // Tabs
+  'tabs', 'tab-',
+  // Modal
+  'modal',
+  // Progress
+  'progress',
+  // Tooltip
+  'tooltip',
+  // Dropdown
+  'dropdown',
+  // Avatar
+  'avatar',
+  // Overflow
+  'overflow-',
+];
+
+function isUtilityClass(className) {
+  return UTILITY_CLASS_PREFIXES.some(prefix => className.startsWith(prefix));
+}
+
 export class CodeGenerator {
   constructor(ast, componentName) {
     this.ast = ast;
@@ -141,6 +186,12 @@ export class CodeGenerator {
       return this.compileApiAction(method.toUpperCase(), path, bodyStr, arrayVar, operator, modifier);
     }
 
+    // Handle simple function calls: functionName -> functionName()
+    // If it's a simple identifier (no operators, no parens), add () to call it
+    if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(action.trim())) {
+      return `${action.trim()}()`;
+    }
+
     return action;
   }
 
@@ -276,10 +327,12 @@ export class CodeGenerator {
     const props = {};
     const events = {};
 
-    // Classes
+    // Classes - preserve utility classes, scope component-specific classes
     if (element.classes.length > 0) {
-      const scopedClasses = element.classes.map(c => `${c}-${this.scopeId}`);
-      props.class = scopedClasses.join(' ');
+      const processedClasses = element.classes.map(c =>
+        isUtilityClass(c) ? c : `${c}-${this.scopeId}`
+      );
+      props.class = processedClasses.join(' ');
     }
 
     // ID
@@ -419,9 +472,12 @@ export class CodeGenerator {
   collectStyles(element, parts) {
     if (!element || element.type !== 'Element') return;
 
-    // Generate class if element has classes
+    // Generate class if element has classes (skip utility classes - they come from SlopUI)
     if (element.classes.length > 0) {
       element.classes.forEach(className => {
+        // Skip utility classes - they're provided by SlopUI
+        if (isUtilityClass(className)) return;
+
         const scopedClass = `${className}-${this.scopeId}`;
         parts.push(`.${scopedClass} {`);
 
