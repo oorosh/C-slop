@@ -127,16 +127,6 @@ export class CodeGenerator {
       return this.compileApiAction(method.toUpperCase(), path, bodyStr, arrayVar, operator, modifier);
     }
 
-    // Handle local actions (no API)
-    // addUser - local add
-    if (action === 'addUser') {
-      return `if ($name.value && $email.value) { $users.value = [...$users.value, { name: $name.value, email: $email.value }]; $name.value = ''; $email.value = ''; }`;
-    }
-    // removeUser - local remove
-    if (action === 'removeUser') {
-      return `$users.value = $users.value.filter((_, i) => i !== item.index);`;
-    }
-
     return action;
   }
 
