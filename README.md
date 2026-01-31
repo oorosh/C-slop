@@ -149,7 +149,7 @@ cslop build <file>     # Compile to JS
 
 ## SlopUI (CSS Library)
 
-SlopUI is a built-in CSS library (like DaisyUI) included automatically in all projects.
+SlopUI is a built-in CSS library included automatically in all projects.
 
 ### Theme Support
 
