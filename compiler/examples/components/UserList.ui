@@ -2,7 +2,6 @@
 
 $users:[]
 $name:""
-$surname:""
 $email:""
 $loading:true
 
@@ -15,7 +14,6 @@ $loading:true
   .form
     input[$name "Name"]
     input[$email "Email"]
-    input[$surname "Surname"]
     button["Add User" @ post:/api/users {name:$name,email:$email} > $users + clear]
 
   ? $loading
