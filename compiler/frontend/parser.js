@@ -10,14 +10,86 @@ export class Parser {
     this.pos = 0;
     this.ast = {
       type: 'Component',
+      imports: [],  // Component imports
       state: [],
       effects: [],
-      markup: null,
+      markup: [],  // Now an array of root elements
       actions: {}
     };
   }
 
   parse() {
+    // Check if source uses <? separator
+    const separatorIndex = this.lines.findIndex(line => line.trim() === '<?');
+
+    if (separatorIndex !== -1) {
+      // Parse state/effects before <?
+      while (this.pos < separatorIndex) {
+        const line = this.lines[this.pos].trim();
+
+        if (!line || line.startsWith('#')) {
+          this.pos++;
+          continue;
+        }
+
+        if (line.startsWith('$')) {
+          this.parseState(line);
+          this.pos++;
+          continue;
+        }
+
+        if (line.startsWith('~')) {
+          this.parseEffect(line);
+          this.pos++;
+          continue;
+        }
+
+        this.pos++;
+      }
+
+      // Skip the <? line
+      this.pos = separatorIndex + 1;
+
+      // Parse all markup after <?
+      this.ast.markup = this.parseRootElements();
+    } else {
+      // Legacy mode: no separator, parse as before
+      while (this.pos < this.lines.length) {
+        const line = this.lines[this.pos].trim();
+
+        if (!line || line.startsWith('#')) {
+          this.pos++;
+          continue;
+        }
+
+        if (line.startsWith('$')) {
+          this.parseState(line);
+          this.pos++;
+          continue;
+        }
+
+        if (line.startsWith('~')) {
+          this.parseEffect(line);
+          this.pos++;
+          continue;
+        }
+
+        // Markup (starts with element, class, or @@Component) - parse all root elements
+        if (line.match(/^[.#@a-zA-Z]/)) {
+          this.ast.markup = this.parseRootElements();
+          break;
+        }
+
+        this.pos++;
+      }
+    }
+
+    return this.ast;
+  }
+
+  parseRootElements() {
+    const elements = [];
+
     while (this.pos < this.lines.length) {
       const line = this.lines[this.pos].trim();
 
@@ -27,30 +99,37 @@ export class Parser {
         continue;
       }
 
-      // State declaration
-      if (line.startsWith('$')) {
-        this.parseState(line);
+      // Component reference: @@ComponentName
+      if (line.match(/^@@[A-Z]/) && this.getIndent(this.pos) === 0) {
+        const componentName = line.slice(2); // Remove @@
+        elements.push({
+          type: 'Component',
+          tag: componentName,
+          children: []
+        });
+        this.ast.imports.push({
+          name: componentName,
+          path: `./${componentName}.js`
+        });
         this.pos++;
         continue;
       }
 
-      // Effect
-      if (line.startsWith('~')) {
-        this.parseEffect(line);
-        this.pos++;
+      // Root element (no indent, starts with element/class)
+      if (line.match(/^[.#a-zA-Z]/) && this.getIndent(this.pos) === 0) {
+        elements.push(this.parseMarkup());
         continue;
       }
 
-      // Markup (starts with element or class)
-      if (line.match(/^[.#a-zA-Z]/)) {
-        this.ast.markup = this.parseMarkup();
+      // If we hit something else at root level, stop
+      if (this.getIndent(this.pos) === 0) {
         break;
       }
 
       this.pos++;
     }
 
-    return this.ast;
+    return elements;
   }
 
   parseState(line) {
@@ -202,6 +281,20 @@ export class Parser {
         }
       }
 
+      // Handle HTML attributes: attrName="value" or attrName='/value'
+      if (content[i].match(/[a-zA-Z]/) && content.substring(i).match(/^([a-zA-Z][a-zA-Z0-9-]*)\s*=\s*["']/)) {
+        const attrMatch = content.substring(i).match(/^([a-zA-Z][a-zA-Z0-9-]*)\s*=\s*(["'])(.*?)\2/);
+        if (attrMatch) {
+          children.push({
+            type: 'Attribute',
+            name: attrMatch[1],
+            value: attrMatch[3]
+          });
+          i += attrMatch[0].length;
+          continue;
+        }
+      }
+
       // Handle event handlers: @ (but not @{...})
       if (content[i] === '@' && content[i + 1] !== '{') {
         // Find the action - everything from @ to the end (or until next space/quote)
@@ -216,10 +309,21 @@ export class Parser {
         }
 
         const action = content.substring(start, end).trim();
-        children.push({
-          type: 'Event',
-          action
-        });
+
+        // Check if it's a navigation action: nav /path
+        const navMatch = action.match(/^nav\s+(\/[^\s]*)/);
+        if (navMatch) {
+          children.push({
+            type: 'Event',
+            eventType: 'nav',
+            action: navMatch[1]  // The path
+          });
+        } else {
+          children.push({
+            type: 'Event',
+            action
+          });
+        }
         i = end;
         continue;
       }
@@ -388,6 +492,25 @@ export class Parser {
       // Conditional
       if (trimmed.startsWith('?')) {
         children.push(this.parseConditional(indent));
+        continue;
+      }
+
+      // Component reference: @@ComponentName
+      if (trimmed.match(/^@@[A-Z]/)) {
+        const componentName = trimmed.slice(2); // Remove @@
+        children.push({
+          type: 'Component',
+          tag: componentName,
+          children: []
+        });
+        // Auto-import if not already imported
+        if (!this.ast.imports.find(i => i.name === componentName)) {
+          this.ast.imports.push({
+            name: componentName,
+            path: `./${componentName}.js`
+          });
+        }
+        this.pos++;
         continue;
       }
 

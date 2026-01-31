@@ -8,6 +8,8 @@ $loading:true
 # Load users on mount
 ~ fetch("/api/users") > $users > $loading:false
 
+<?
+
 .container
   h1["User Management"]
 

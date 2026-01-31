@@ -31,7 +31,14 @@ export class CodeGenerator {
 
     // Imports
     parts.push(`import { signal, computed, effect } from './signals.js';`);
-    parts.push(`import { h, list } from './dom.js';`);
+    parts.push(`import { h, list, mount, navigate } from './dom.js';`);
+
+    // Component imports
+    if (this.ast.imports && this.ast.imports.length > 0) {
+      this.ast.imports.forEach(imp => {
+        parts.push(`import { ${imp.name} } from '${imp.path}';`);
+      });
+    }
     parts.push('');
 
     // Component function
@@ -78,9 +85,16 @@ export class CodeGenerator {
     // Render function
     parts.push('  // Render');
     parts.push('  const render = () => {');
-    if (this.ast.markup) {
-      const rendered = this.generateElement(this.ast.markup, '    ');
-      parts.push(`    return ${rendered};`);
+    if (this.ast.markup && this.ast.markup.length > 0) {
+      if (this.ast.markup.length === 1) {
+        // Single root element
+        const rendered = this.generateElement(this.ast.markup[0], '    ');
+        parts.push(`    return ${rendered};`);
+      } else {
+        // Multiple root elements - return as array (fragment)
+        const elements = this.ast.markup.map(el => this.generateElement(el, '      ')).join(',\n      ');
+        parts.push(`    return [\n      ${elements}\n    ];`);
+      }
     } else {
       parts.push('    return h("div", null, "Empty component");');
     }
@@ -241,6 +255,12 @@ export class CodeGenerator {
       return `list(${element.array}, (item, index) => { item.index = index; return [${template}]; })`;
     }
 
+    if (element.type === 'Component') {
+      // Render child component: ComponentName()() returns the DOM element(s)
+      const componentName = element.tag;
+      return `${componentName}()()`;
+    }
+
     if (element.type === 'Element') {
       const tag = element.tag;
       const props = this.generateProps(element, inLoop);
@@ -285,14 +305,26 @@ export class CodeGenerator {
       }
     }
 
+    // Extract HTML attributes from children
+    const attributeChildren = element.children.filter(c => c.type === 'Attribute');
+    attributeChildren.forEach(attr => {
+      props[attr.name] = attr.value;
+    });
+
     // Extract event handlers from children
     const eventChildren = element.children.filter(c => c.type === 'Event');
     eventChildren.forEach(event => {
-      const action = this.compileAction(event.action);
+      // Handle navigation events - must prevent default for links
+      if (event.eventType === 'nav') {
+        events.click = `e.preventDefault(); navigate('${event.action}')`;
+        events.needsEvent = true;  // Flag to include event parameter
+      } else {
+        const action = this.compileAction(event.action);
 
-      // Determine event type (for input it's already set above)
-      if (!events.input) {
-        events.click = action;
+        // Determine event type (for input it's already set above)
+        if (!events.input) {
+          events.click = action;
+        }
       }
     });
 
@@ -315,9 +347,13 @@ export class CodeGenerator {
     }
 
     if (Object.keys(events).length > 0) {
+      const needsEvent = events.needsEvent;
       Object.entries(events).forEach(([key, value]) => {
+        if (key === 'needsEvent') return;  // Skip the flag
         if (key === 'input') {
           propParts.push(`oninput: ${value}`);
+        } else if (needsEvent) {
+          propParts.push(`onclick: (e) => { ${value} }`);
         } else {
           propParts.push(`onclick: () => { ${value} }`);
         }
@@ -332,9 +368,9 @@ export class CodeGenerator {
   }
 
   generateChildren(children, indent, inLoop = false, elementTag = null) {
-    // Filter out Event nodes as they're handled in props
+    // Filter out Event nodes and Attribute nodes as they're handled in props
     // Filter out Variable and Text nodes for input elements (they're used for binding/placeholder)
-    let nonEventChildren = children.filter(c => c.type !== 'Event');
+    let nonEventChildren = children.filter(c => c.type !== 'Event' && c.type !== 'Attribute');
 
     if (elementTag === 'input') {
       nonEventChildren = nonEventChildren.filter(c => c.type !== 'Variable' && c.type !== 'Text');
@@ -361,8 +397,12 @@ export class CodeGenerator {
     parts.push(`/* Generated from ${this.componentName}.ui */`);
     parts.push('');
 
-    // Generate scoped styles
-    this.collectStyles(this.ast.markup, parts);
+    // Generate scoped styles for all root elements
+    if (this.ast.markup && this.ast.markup.length > 0) {
+      this.ast.markup.forEach(element => {
+        this.collectStyles(element, parts);
+      });
+    }
 
     return parts.join('\n');
   }

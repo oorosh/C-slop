@@ -13,6 +13,7 @@ if (args.length === 0) {
   console.log('C-slop - Token-minimal web framework');
   console.log('');
   console.log('Usage:');
+  console.log('  cslop create <name>      Create a new project');
   console.log('  cslop start              Start app (compile frontend + run backend)');
   console.log('  cslop watch              Start with hot reload (like Vite)');
   console.log('  cslop <file.slop>        Run a .slop file');
@@ -22,59 +23,76 @@ if (args.length === 0) {
   console.log('  slop.json                Config file');
   console.log('  api.slop                 Backend API');
   console.log('  components/*.ui          Frontend components');
-  console.log('  public/                  Static files output');
+  console.log('  dist/                    Static files output');
   process.exit(1);
 }
 
 const command = args[0];
 
 // Helper: Compile frontend components
-function compileFrontend(componentsDir, outputDir) {
+function compileFrontend(componentsDir, outputDir, projectRoot) {
   const frontendDir = path.join(__dirname, '..', 'frontend');
   const parserPath = path.join(frontendDir, 'parser.js');
   const codegenPath = path.join(frontendDir, 'codegen.js');
+  const routerParserPath = path.join(frontendDir, 'router-parser.js');
+  const routerCodegenPath = path.join(frontendDir, 'router-codegen.js');
 
   // Dynamic import for ES modules
   return import(parserPath).then(({ parseComponent }) => {
     return import(codegenPath).then(({ generateCode }) => {
-      // Get .ui files
-      if (!fs.existsSync(componentsDir)) return [];
+      return import(routerParserPath).then(({ parseRouter }) => {
+        return import(routerCodegenPath).then(({ generateRouterCode }) => {
+          // Ensure output directories
+          const jsDir = path.join(outputDir, 'js');
+          const cssDir = path.join(outputDir, 'css');
+          fs.mkdirSync(jsDir, { recursive: true });
+          fs.mkdirSync(cssDir, { recursive: true });
 
-      const files = fs.readdirSync(componentsDir).filter(f => f.endsWith('.ui'));
-      const compiled = [];
+          const compiled = [];
 
-      for (const file of files) {
-        const source = fs.readFileSync(path.join(componentsDir, file), 'utf8');
-        const name = path.basename(file, '.ui');
+          // Get .ui files
+          if (fs.existsSync(componentsDir)) {
+            const files = fs.readdirSync(componentsDir).filter(f => f.endsWith('.ui'));
 
-        const ast = parseComponent(source);
-        const { js, css } = generateCode(ast, name);
+            for (const file of files) {
+              const source = fs.readFileSync(path.join(componentsDir, file), 'utf8');
+              const name = path.basename(file, '.ui');
 
-        // Ensure output directories
-        const jsDir = path.join(outputDir, 'js');
-        const cssDir = path.join(outputDir, 'css');
-        fs.mkdirSync(jsDir, { recursive: true });
-        fs.mkdirSync(cssDir, { recursive: true });
+              const ast = parseComponent(source);
+              const { js, css } = generateCode(ast, name);
 
-        // Write files
-        fs.writeFileSync(path.join(jsDir, `${name}.js`), js);
-        fs.writeFileSync(path.join(cssDir, `${name}.css`), css);
+              // Write files
+              fs.writeFileSync(path.join(jsDir, `${name}.js`), js);
+              fs.writeFileSync(path.join(cssDir, `${name}.css`), css);
 
-        compiled.push(name);
-      }
+              compiled.push(name);
+            }
+          }
 
-      // Copy runtime
-      const runtimeDir = path.join(__dirname, '..', 'runtime');
-      const runtimeFiles = ['signals.js', 'dom.js'];
-      for (const file of runtimeFiles) {
-        const src = path.join(runtimeDir, file);
-        const dest = path.join(outputDir, 'js', file);
-        if (fs.existsSync(src)) {
-          fs.copyFileSync(src, dest);
-        }
-      }
+          // Check for router.slop and compile it
+          const routerPath = path.join(projectRoot || componentsDir.replace('/components', ''), 'router.slop');
+          if (fs.existsSync(routerPath)) {
+            const routerSource = fs.readFileSync(routerPath, 'utf8');
+            const routes = parseRouter(routerSource);
+            const routerJs = generateRouterCode(routes);
+            fs.writeFileSync(path.join(jsDir, 'router-config.js'), routerJs);
+            compiled.push('router-config');
+          }
 
-      return compiled;
+          // Copy runtime files (including router.js)
+          const runtimeDir = path.join(__dirname, '..', 'runtime');
+          const runtimeFiles = ['signals.js', 'dom.js', 'router.js'];
+          for (const file of runtimeFiles) {
+            const src = path.join(runtimeDir, file);
+            const dest = path.join(outputDir, 'js', file);
+            if (fs.existsSync(src)) {
+              fs.copyFileSync(src, dest);
+            }
+          }
+
+          return compiled;
+        });
+      });
     });
   });
 }
@@ -108,11 +126,11 @@ if (command === 'start') {
 
   // Compile frontend if components directory exists
   const componentsDir = path.join(cwd, 'components');
-  const publicDir = path.join(cwd, config.server?.static || 'public');
+  const publicDir = path.join(cwd, config.server?.static || 'dist');
 
   if (fs.existsSync(componentsDir)) {
     console.log('Compiling frontend components...');
-    compileFrontend(componentsDir, publicDir)
+    compileFrontend(componentsDir, publicDir, cwd)
       .then(compiled => {
         if (compiled.length > 0) {
           compiled.forEach(name => console.log(`  ✓ ${name}.ui`));
@@ -169,7 +187,7 @@ if (command === 'start') {
 
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   const componentsDir = path.join(cwd, 'components');
-  const publicDir = path.join(cwd, config.server?.static || 'public');
+  const publicDir = path.join(cwd, config.server?.static || 'dist');
   const wsPort = 35729; // Live reload WebSocket port
 
   // Find API file
@@ -363,15 +381,48 @@ try {
 
     slopFiles.forEach(file => {
       const filePath = path.join(cwd, file);
-      fs.watch(filePath, { persistent: true }, (eventType) => {
+      fs.watch(filePath, { persistent: true }, async (eventType) => {
         if (eventType === 'change') {
           console.log(`  \x1b[33m↻\x1b[0m ${file} changed`);
-          restartServer();
-          // Also notify clients to reload (API might have changed)
-          setTimeout(() => notifyClients('reload', file), 500);
+
+          // If router.slop changed, recompile it
+          if (file === 'router.slop') {
+            try {
+              await compileRouter();
+              console.log(`  \x1b[32m✓\x1b[0m Compiled router.slop`);
+              notifyClients('reload', file);
+            } catch (err) {
+              console.log(`  \x1b[31m✗\x1b[0m router.slop: ${err.message}`);
+            }
+          } else {
+            // Backend API file changed - restart server
+            restartServer();
+            // Also notify clients to reload (API might have changed)
+            setTimeout(() => notifyClients('reload', file), 500);
+          }
         }
       });
     });
+  }
+
+  // Compile router.slop if it exists
+  async function compileRouter() {
+    const routerPath = path.join(cwd, 'router.slop');
+    if (!fs.existsSync(routerPath)) return null;
+
+    const frontendDir = path.join(__dirname, '..', 'frontend');
+    const { parseRouter } = await import(path.join(frontendDir, 'router-parser.js'));
+    const { generateRouterCode } = await import(path.join(frontendDir, 'router-codegen.js'));
+
+    const routerSource = fs.readFileSync(routerPath, 'utf8');
+    const routes = parseRouter(routerSource);
+    const routerJs = generateRouterCode(routes);
+
+    const jsDir = path.join(publicDir, 'js');
+    fs.mkdirSync(jsDir, { recursive: true });
+    fs.writeFileSync(path.join(jsDir, 'router-config.js'), routerJs);
+
+    return 'router-config';
   }
 
   // Initial compile
@@ -389,9 +440,9 @@ try {
         }
       }
 
-      // Copy runtime files
+      // Copy runtime files (including router.js)
       const runtimeDir = path.join(__dirname, '..', 'runtime');
-      const runtimeFiles = ['signals.js', 'dom.js'];
+      const runtimeFiles = ['signals.js', 'dom.js', 'router.js'];
       for (const file of runtimeFiles) {
         const src = path.join(runtimeDir, file);
         const dest = path.join(publicDir, 'js', file);
@@ -399,6 +450,16 @@ try {
           fs.copyFileSync(src, dest);
         }
       }
+    }
+
+    // Compile router.slop if it exists
+    try {
+      const routerName = await compileRouter();
+      if (routerName) {
+        console.log(`  \x1b[32m✓\x1b[0m router.slop`);
+      }
+    } catch (err) {
+      console.log(`  \x1b[31m✗\x1b[0m router.slop: ${err.message}`);
     }
 
     // Inject live reload script
@@ -419,20 +480,557 @@ try {
     process.exit(1);
   });
 
-  // Cleanup on exit
-  process.on('SIGINT', () => {
+  // Cleanup function
+  let isCleaningUp = false;
+  function cleanup() {
+    if (isCleaningUp) return;
+    isCleaningUp = true;
+
     console.log('\n  Shutting down...');
-    if (serverProcess) serverProcess.kill();
-    wss.close();
+
+    // Kill server process
+    if (serverProcess) {
+      serverProcess.kill('SIGTERM');
+      serverProcess = null;
+    }
+
+    // Close WebSocket server
+    try {
+      wss.close();
+    } catch (e) {}
 
     // Clean up temp runner
     const runnerPath = path.join(__dirname, '.runner.tmp.js');
     if (fs.existsSync(runnerPath)) {
-      fs.unlinkSync(runnerPath);
+      try {
+        fs.unlinkSync(runnerPath);
+      } catch (e) {}
     }
 
     process.exit(0);
+  }
+
+  // Handle all exit scenarios
+  process.on('SIGINT', cleanup);   // Ctrl+C
+  process.on('SIGTERM', cleanup);  // kill command
+  process.on('SIGHUP', cleanup);   // terminal closed
+  process.stdin.on('end', cleanup); // Ctrl+D (EOF)
+  process.on('exit', () => {
+    // Last resort cleanup (sync only)
+    if (serverProcess) serverProcess.kill('SIGTERM');
   });
+
+} else if (command === 'create') {
+  // Create mode: cslop create <project-name>
+  const projectName = args[1];
+
+  if (!projectName) {
+    console.error('Usage: cslop create <project-name>');
+    console.error('Example: cslop create my-app');
+    process.exit(1);
+  }
+
+  // Validate project name (alphanumeric, hyphens, underscores)
+  if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(projectName)) {
+    console.error('Error: Project name must start with a letter and contain only letters, numbers, hyphens, and underscores');
+    process.exit(1);
+  }
+
+  const projectPath = path.resolve(process.cwd(), projectName);
+
+  if (fs.existsSync(projectPath)) {
+    console.error(`Error: Directory '${projectName}' already exists`);
+    process.exit(1);
+  }
+
+  console.log('\x1b[36m');
+  console.log('  Creating new C-slop project...');
+  console.log('\x1b[0m');
+
+  // Create directory structure
+  fs.mkdirSync(projectPath);
+  fs.mkdirSync(path.join(projectPath, 'components'));
+  fs.mkdirSync(path.join(projectPath, 'dist'));
+  fs.mkdirSync(path.join(projectPath, 'dist', 'js'));
+  fs.mkdirSync(path.join(projectPath, 'dist', 'css'));
+
+  // Template: slop.json
+  const slopJson = {
+    name: projectName,
+    database: {
+      type: 'memory'
+    },
+    server: {
+      port: 3000,
+      static: './dist'
+    }
+  };
+  fs.writeFileSync(
+    path.join(projectPath, 'slop.json'),
+    JSON.stringify(slopJson, null, 2)
+  );
+  console.log('  \x1b[32m✓\x1b[0m slop.json');
+
+  // Template: api.slop
+  const apiSlop = `# API Routes
+
+# Health check
+*/api/health > #json({status: "ok"})
+
+# Example: Get all items
+*/api/items > @items > #json
+
+# Example: Create item
+*/api/items + @items!$.body > #json
+`;
+  fs.writeFileSync(path.join(projectPath, 'api.slop'), apiSlop);
+  console.log('  \x1b[32m✓\x1b[0m api.slop');
+
+  // Template: router.slop
+  const routerSlop = `# Router Configuration
+# Syntax: /path > @@Component
+
+/ > @@Home
+/counter > @@Counter
+`;
+  fs.writeFileSync(path.join(projectPath, 'router.slop'), routerSlop);
+  console.log('  \x1b[32m✓\x1b[0m router.slop');
+
+  // Template: components/Home.ui
+  const homeUi = `# Home - Landing Page
+
+<?
+
+.home
+  h1["Welcome to ${projectName}"]
+  p["A C-slop application with client-side routing"]
+  .nav
+    a["Go to Counter" href="/counter" @ nav /counter]
+`;
+  fs.writeFileSync(path.join(projectPath, 'components', 'Home.ui'), homeUi);
+  console.log('  \x1b[32m✓\x1b[0m components/Home.ui');
+
+  // Template: components/Counter.ui
+  const counterUi = `# Counter - Example Component
+
+$count:0
+
+<?
+
+.counter
+  h1["Count: @{$count}"]
+  .buttons
+    button["-" @ $count--]
+    button["Reset" @ $count:0]
+    button["+" @ $count++]
+  .nav
+    a["Back to Home" href="/" @ nav /]
+`;
+  fs.writeFileSync(path.join(projectPath, 'components', 'Counter.ui'), counterUi);
+  console.log('  \x1b[32m✓\x1b[0m components/Counter.ui');
+
+  // Template: dist/index.html
+  const indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${projectName}</title>
+  <link rel="stylesheet" href="/css/Home.css">
+  <link rel="stylesheet" href="/css/Counter.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 2rem;
+      background: #1a1a1a;
+      color: #fff;
+      min-height: 100vh;
+    }
+    h1 { margin-bottom: 1rem; }
+    p { margin-bottom: 1rem; color: #aaa; }
+    a {
+      color: #6af;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    a:hover { text-decoration: underline; }
+    button {
+      padding: 0.5rem 1rem;
+      margin: 0.25rem;
+      border: none;
+      border-radius: 4px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #444; }
+    button:active { transform: scale(0.98); }
+    .home { text-align: center; margin-top: 2rem; }
+    .counter { text-align: center; margin-top: 2rem; }
+    .buttons { margin-top: 1rem; }
+    .nav { margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    import { createRouter } from '/js/router-config.js';
+    createRouter(document.getElementById('app'));
+  </script>
+</body>
+</html>
+`;
+  fs.writeFileSync(path.join(projectPath, 'dist', 'index.html'), indexHtml);
+  console.log('  \x1b[32m✓\x1b[0m dist/index.html');
+
+  // Copy runtime files (including router.js)
+  const runtimeDir = path.join(__dirname, '..', 'runtime');
+  const runtimeFiles = ['signals.js', 'dom.js', 'router.js'];
+  for (const file of runtimeFiles) {
+    const src = path.join(runtimeDir, file);
+    const dest = path.join(projectPath, 'dist', 'js', file);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, dest);
+      console.log(`  \x1b[32m✓\x1b[0m dist/js/${file}`);
+    }
+  }
+
+  // Create reference.md
+  const referenceMd = `# C-slop Reference
+
+## Project Structure
+
+\`\`\`
+project/
+├── slop.json          # Configuration
+├── api.slop           # Backend API routes
+├── router.slop        # Frontend routing config
+├── components/        # Frontend UI components
+│   ├── Home.ui        # Home page component
+│   └── *.ui           # Other components
+└── dist/              # Compiled output
+    ├── index.html     # Entry HTML
+    ├── js/            # Compiled JS + runtime
+    └── css/           # Compiled CSS
+\`\`\`
+
+## Commands
+
+\`\`\`bash
+cslop create <name>    # Create new project
+cslop watch            # Dev server with hot reload
+cslop start            # Production server
+cslop build <file>     # Compile .slop to JS
+\`\`\`
+
+---
+
+## Backend (.slop files)
+
+### Routes
+
+\`\`\`
+*/ > #json({status:"ok"})              # GET /
+*/users > @users > #json               # GET /users
+*/users/:id > @users[$.id] > #json     # GET /users/:id with param
+*/users + @users!$.body > #json        # POST /users
+*/users/:id ^ @users[$.id]!$.body > #json  # PUT /users/:id
+*/users/:id - @users[$.id]!- > #204    # DELETE /users/:id
+\`\`\`
+
+### Symbols
+
+| Symbol | Meaning | Example |
+|--------|---------|---------|
+| \`*\` | Route | \`*/api/users\` |
+| \`+\` | POST method | \`*/users +\` |
+| \`^\` | PUT method | \`*/users/:id ^\` |
+| \`-\` | DELETE method | \`*/users/:id -\` |
+| \`@\` | Database table | \`@users\` |
+| \`$\` | Request data | \`$.body\`, \`$.id\`, \`$.query\` |
+| \`#\` | Response | \`#json\`, \`#html\`, \`#201\` |
+| \`>\` | Pipeline | \`@users > #json\` |
+| \`?\` | Filter | \`@users?{active:true}\` |
+| \`!\` | Mutation | \`@users!$.body\` (insert) |
+
+### Request Data (\`$\`)
+
+\`\`\`
+$.id              # URL param :id
+$.body            # Request body (POST/PUT)
+$.query.search    # Query string ?search=...
+$.headers.auth    # Request headers
+\`\`\`
+
+### Database Operations (\`@\`)
+
+\`\`\`
+@users                    # Get all
+@users[123]               # Get by ID
+@users[$.id]              # Get by param
+@users?{active:true}      # Filter
+@users!$.body             # Insert
+@users[$.id]!$.body       # Update
+@users[$.id]!-            # Delete
+\`\`\`
+
+### Responses (\`#\`)
+
+\`\`\`
+#json(data)       # JSON response
+#json             # Pipe data as JSON
+#html(content)    # HTML response
+#201              # Status code
+#404              # Not found
+#400("message")   # Status with message
+\`\`\`
+
+---
+
+## Frontend (.ui files)
+
+### File Structure
+
+\`\`\`
+# Comment
+
+$state:0             # State declaration
+$computed := expr    # Computed state
+~ effect             # Side effect
+
+<?                   # Template separator
+
+div.class#id         # Markup
+  @@ChildComponent   # Use component (auto-imports)
+\`\`\`
+
+### Component References
+
+\`\`\`
+@@Counter            # Use Counter component (auto-imports)
+@@UserList           # Use UserList component (auto-imports)
+\`\`\`
+
+### State
+
+\`\`\`
+$count:0             # Number
+$name:""             # String
+$items:[]            # Array
+$user:{}             # Object
+$active:true         # Boolean
+
+$doubled := $count * 2    # Computed (reactive)
+\`\`\`
+
+### Effects
+
+\`\`\`
+~ fetch("/api/users") > $users              # Fetch and store
+~ fetch("/api") > $data > $loading:false    # Chain assignments
+~ $condition > doSomething                  # Conditional effect
+\`\`\`
+
+### Markup
+
+\`\`\`
+div                      # Element
+.class                   # div with class
+div.foo.bar              # Multiple classes
+div#id                   # With ID
+div.class#id             # Combined
+
+div["text"]              # With text content
+div["Count: @{$count}"]  # Reactive interpolation
+h1["Hello"]              # Any HTML tag
+\`\`\`
+
+### Nesting (indentation-based)
+
+\`\`\`
+div.container
+  h1["Title"]
+  p["Paragraph"]
+  div.nested
+    span["Deep"]
+\`\`\`
+
+### Events
+
+\`\`\`
+button["Click" @ $count++]       # Increment
+button["Click" @ $count--]       # Decrement
+button["Reset" @ $count:0]       # Assignment
+button["Save" @ saveData]        # Call function
+\`\`\`
+
+### Conditionals
+
+\`\`\`
+? $loading
+  p["Loading..."]
+
+? $count > 10
+  p["Big number!"]
+\`\`\`
+
+### Loops
+
+\`\`\`
+$users                   # Iterate over array
+  .card
+    h3[:name]            # Access item.name
+    p[:email]            # Access item.email
+\`\`\`
+
+### Using Components
+
+\`\`\`
+<?
+
+div.app
+  @@Counter            # Render Counter component (auto-imports)
+  @@UserList           # Render UserList component (auto-imports)
+\`\`\`
+
+### Navigation
+
+\`\`\`
+# Navigate on click (client-side routing)
+a["Go to Counter" href="/counter" @ nav /counter]
+button["Back" @ nav /]
+\`\`\`
+
+---
+
+## Routing (router.slop)
+
+\`\`\`
+# Syntax: /path > @@Component
+
+/ > @@Home
+/about > @@About
+/users/:id > @@UserDetail
+\`\`\`
+
+Access route params in components:
+\`\`\`
+# UserDetail.ui - $route.params.id contains the :id value
+h1["User: @{$route.params.id}"]
+\`\`\`
+
+---
+
+### Input Binding
+
+\`\`\`
+input[$name "Enter name"]     # Two-way bind to $name, placeholder text
+input[$email "Email"]
+\`\`\`
+
+### API Actions in Events
+
+\`\`\`
+# POST and add to array
+button["Add" @ post:/api/users {name:$name} > $users + clear]
+
+# DELETE and remove from array
+button["Delete" @ delete:/api/users/:id > $users - :id]
+\`\`\`
+
+---
+
+## Configuration (slop.json)
+
+\`\`\`json
+{
+  "name": "my-app",
+  "database": {
+    "type": "memory"       // or "sqlite"
+    "connection": "./app.db"  // for sqlite
+  },
+  "server": {
+    "port": 3000,
+    "static": "./dist"
+  }
+}
+\`\`\`
+
+---
+
+## Quick Examples
+
+### Simple Counter (Counter.ui)
+
+\`\`\`
+$count:0
+
+<?
+
+.counter
+  h1["Count: @{$count}"]
+  button["-" @ $count--]
+  button["+" @ $count++]
+\`\`\`
+
+### User List with API (UserList.ui)
+
+\`\`\`
+$users:[]
+$name:""
+$loading:true
+
+~ fetch("/api/users") > $users > $loading:false
+
+<?
+
+.container
+  input[$name "Name"]
+  button["Add" @ post:/api/users {name:$name} > $users + clear]
+
+  ? $loading
+    p["Loading..."]
+
+  $users
+    .card
+      span[:name]
+      button["X" @ delete:/api/users/:id > $users - :id]
+\`\`\`
+
+### API Routes (api.slop)
+
+\`\`\`
+# Health check
+*/ > #json({status:"ok"})
+
+# CRUD for users
+*/api/users > @users > #json
+*/api/users + @users!$.body > #json
+*/api/users/:id - @users[$.id]!- > #json
+\`\`\`
+`;
+  fs.writeFileSync(path.join(projectPath, 'reference.md'), referenceMd);
+  console.log('  \x1b[32m✓\x1b[0m reference.md');
+
+  // Create .gitignore
+  const gitignore = `node_modules/
+*.db
+.DS_Store
+`;
+  fs.writeFileSync(path.join(projectPath, '.gitignore'), gitignore);
+  console.log('  \x1b[32m✓\x1b[0m .gitignore');
+
+  console.log('');
+  console.log('\x1b[32m  ✓ Project created successfully!\x1b[0m');
+  console.log('');
+  console.log('  Next steps:');
+  console.log(`    cd ${projectName}`);
+  console.log('    cslop watch');
+  console.log('');
+  console.log('  Then open http://localhost:3000 in your browser');
+  console.log('');
 
 } else if (command === 'build') {
   // Build mode: cslop build file.slop -o output.js

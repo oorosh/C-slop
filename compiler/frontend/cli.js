@@ -77,12 +77,12 @@ async function main() {
 
   if (args.length === 0) {
     console.log('Usage: node cli.js <input-dir> [output-dir]');
-    console.log('Example: node cli.js ../examples/components ../examples/public');
+    console.log('Example: node cli.js ./components ./dist');
     process.exit(1);
   }
 
   const inputDir = path.resolve(args[0]);
-  const outputDir = path.resolve(args[1] || '../examples/public');
+  const outputDir = path.resolve(args[1] || './dist');
 
   console.log('C-slop Frontend Compiler');
   console.log('========================\n');

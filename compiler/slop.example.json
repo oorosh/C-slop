@@ -6,6 +6,7 @@
   },
   "server": {
     "port": 3000,
-    "host": "localhost"
+    "host": "localhost",
+    "static": "./dist"
   }
 }

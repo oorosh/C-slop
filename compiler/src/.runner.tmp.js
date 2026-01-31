@@ -4,7 +4,7 @@ const { createRuntime } = require('./runtime');
 const fs = require('fs');
 const path = require('path');
 
-const fullPath = '/Users/bogdanchayka/Projects/C-slop/compiler/examples/api.slop';
+const fullPath = '/Users/bogdanchayka/Projects/test-slop/api.slop';
 const code = fs.readFileSync(fullPath, 'utf8');
 
 try {
