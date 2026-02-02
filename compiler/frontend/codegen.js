@@ -3,6 +3,105 @@
  * Generates JavaScript and CSS from AST
  */
 
+// Regex to detect arbitrary value classes like p-[15px], bg-[#435453], etc.
+const ARBITRARY_CLASS_REGEX = /^(p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|w|h|min-w|max-w|min-h|max-h|gap|text|bg|border|rounded|top|right|bottom|left|z|opacity)-\[(.+)\]$/;
+
+// Mapping from arbitrary class prefix to CSS property/properties
+const ARBITRARY_PROPERTY_MAP = {
+  'p': ['padding'],
+  'px': ['padding-left', 'padding-right'],
+  'py': ['padding-top', 'padding-bottom'],
+  'pt': ['padding-top'],
+  'pb': ['padding-bottom'],
+  'pl': ['padding-left'],
+  'pr': ['padding-right'],
+  'm': ['margin'],
+  'mx': ['margin-left', 'margin-right'],
+  'my': ['margin-top', 'margin-bottom'],
+  'mt': ['margin-top'],
+  'mb': ['margin-bottom'],
+  'ml': ['margin-left'],
+  'mr': ['margin-right'],
+  'w': ['width'],
+  'h': ['height'],
+  'min-w': ['min-width'],
+  'max-w': ['max-width'],
+  'min-h': ['min-height'],
+  'max-h': ['max-height'],
+  'gap': ['gap'],
+  'bg': ['background-color'],
+  'rounded': ['border-radius'],
+  'top': ['top'],
+  'right': ['right'],
+  'bottom': ['bottom'],
+  'left': ['left'],
+  'z': ['z-index'],
+  'opacity': ['opacity'],
+};
+
+/**
+ * Check if a value looks like a color (for text-[*] and border-[*] disambiguation)
+ */
+function isColorValue(value) {
+  return value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl');
+}
+
+/**
+ * Check if a class is an arbitrary value class
+ */
+function isArbitraryClass(className) {
+  return ARBITRARY_CLASS_REGEX.test(className);
+}
+
+/**
+ * Parse an arbitrary class and return its prefix and value
+ */
+function parseArbitraryClass(className) {
+  const match = className.match(ARBITRARY_CLASS_REGEX);
+  if (!match) return null;
+  const [, prefix, value] = match;
+  return { prefix, value, className };
+}
+
+/**
+ * Generate CSS properties and value for an arbitrary class
+ */
+function getArbitraryProperties(prefix, value) {
+  // Handle special cases that depend on the value
+  if (prefix === 'text') {
+    return isColorValue(value) ? ['color'] : ['font-size'];
+  }
+  if (prefix === 'border') {
+    return isColorValue(value) ? ['border-color'] : ['border-width'];
+  }
+  return ARBITRARY_PROPERTY_MAP[prefix] || [];
+}
+
+/**
+ * Escape special characters for CSS selector
+ */
+function escapeForCSS(className) {
+  return className.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/#/g, '\\#');
+}
+
+/**
+ * Generate CSS rule for an arbitrary class
+ */
+function generateArbitraryClassCSS(className) {
+  const parsed = parseArbitraryClass(className);
+  if (!parsed) return null;
+
+  const { prefix, value } = parsed;
+  const properties = getArbitraryProperties(prefix, value);
+
+  if (properties.length === 0) return null;
+
+  const escapedSelector = escapeForCSS(className);
+  const declarations = properties.map(prop => `  ${prop}: ${value};`).join('\n');
+
+  return `.${escapedSelector} {\n${declarations}\n}`;
+}
+
 // SlopUI utility classes that should NOT be scoped
 const UTILITY_CLASS_PREFIXES = [
   // Buttons
@@ -45,6 +144,9 @@ const UTILITY_CLASS_PREFIXES = [
 ];
 
 function isUtilityClass(className) {
+  // First check if it's an arbitrary value class
+  if (isArbitraryClass(className)) return true;
+  // Then check predefined prefixes
   return UTILITY_CLASS_PREFIXES.some(prefix => className.startsWith(prefix));
 }
 
@@ -469,6 +571,7 @@ export class CodeGenerator {
 
   generateCSS() {
     const parts = [];
+    const arbitraryClasses = new Set();
 
     parts.push(`/* Generated from ${this.componentName}.ui */`);
     parts.push('');
@@ -476,11 +579,57 @@ export class CodeGenerator {
     // Generate scoped styles for all root elements
     if (this.ast.markup && this.ast.markup.length > 0) {
       this.ast.markup.forEach(element => {
+        this.collectArbitraryClasses(element, arbitraryClasses);
         this.collectStyles(element, parts);
       });
     }
 
+    // Generate CSS for arbitrary classes
+    if (arbitraryClasses.size > 0) {
+      parts.push('/* Arbitrary value utilities */');
+      arbitraryClasses.forEach(className => {
+        const css = generateArbitraryClassCSS(className);
+        if (css) {
+          parts.push(css);
+          parts.push('');
+        }
+      });
+    }
+
     return parts.join('\n');
+  }
+
+  collectArbitraryClasses(element, arbitraryClasses) {
+    if (!element) return;
+
+    if (element.type === 'Element') {
+      // Collect arbitrary classes from this element
+      if (element.classes && element.classes.length > 0) {
+        element.classes.forEach(className => {
+          if (isArbitraryClass(className)) {
+            arbitraryClasses.add(className);
+          }
+        });
+      }
+
+      // Recurse into children
+      if (element.children) {
+        element.children.forEach(child => {
+          this.collectArbitraryClasses(child, arbitraryClasses);
+        });
+      }
+    } else if (element.type === 'Conditional') {
+      if (element.trueBranch) {
+        element.trueBranch.forEach(el => this.collectArbitraryClasses(el, arbitraryClasses));
+      }
+      if (element.falseBranch) {
+        element.falseBranch.forEach(el => this.collectArbitraryClasses(el, arbitraryClasses));
+      }
+    } else if (element.type === 'Loop') {
+      if (element.template) {
+        element.template.forEach(el => this.collectArbitraryClasses(el, arbitraryClasses));
+      }
+    }
   }
 
   collectStyles(element, parts) {
@@ -489,7 +638,7 @@ export class CodeGenerator {
     // Generate class if element has classes (skip utility classes - they come from SlopUI)
     if (element.classes.length > 0) {
       element.classes.forEach(className => {
-        // Skip utility classes - they're provided by SlopUI
+        // Skip utility classes (including arbitrary classes) - they're provided by SlopUI or generated separately
         if (isUtilityClass(className)) return;
 
         const scopedClass = `${className}-${this.scopeId}`;

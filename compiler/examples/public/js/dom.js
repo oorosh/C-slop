@@ -64,7 +64,17 @@ export function h(tag, props, children) {
 export function mount(component, target) {
   const renderFn = component();
   const root = renderFn();
-  target.appendChild(root);
+
+  // Handle array of elements (fragments)
+  if (Array.isArray(root)) {
+    root.forEach(el => {
+      if (el instanceof Node) {
+        target.appendChild(el);
+      }
+    });
+  } else {
+    target.appendChild(root);
+  }
 }
 
 export function list(arrayOrSignal, renderItem) {

@@ -216,8 +216,8 @@ export class Parser {
     const parentIndent = this.getIndent(this.pos);
 
     // Parse element definition: tag.class#id, tag.class#id[content], or &alias[content]
-    // Extract element def before [ if present
-    const bracketIndex = line.indexOf('[');
+    // Find the content bracket - it's a [ that's NOT preceded by - (which would be arbitrary value like p-[15px])
+    const bracketIndex = this.findContentBracket(line);
     let elementDef = bracketIndex >= 0 ? line.substring(0, bracketIndex) : line;
 
     // Expand alias if starts with &
@@ -249,6 +249,30 @@ export class Parser {
     element.children.push(...childElements);
 
     return element;
+  }
+
+  findContentBracket(line) {
+    // Find the content bracket [, which is NOT part of an arbitrary value class like p-[15px]
+    // Arbitrary value brackets are preceded by '-', content brackets are not
+    let depth = 0;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '[') {
+        // Check if this is an arbitrary value bracket (preceded by -)
+        if (i > 0 && line[i - 1] === '-') {
+          // This is an arbitrary value bracket, skip to its closing ]
+          depth++;
+        } else if (depth === 0) {
+          // This is the content bracket
+          return i;
+        }
+      } else if (char === ']') {
+        if (depth > 0) {
+          depth--;
+        }
+      }
+    }
+    return -1; // No content bracket found
   }
 
   parseMultilineBlock(startPos) {
@@ -315,21 +339,50 @@ export class Parser {
     let classes = [];
     let id = null;
 
-    // Split by . and #
-    const parts = def.split(/([.#])/);
+    // Parse element definition, handling brackets in class names (e.g., p-[15px], bg-[#435453])
+    // We need to be careful not to split on . or # inside brackets
+    let i = 0;
+    let current = '';
+    let inBracket = false;
+    let mode = 'tag'; // 'tag', 'class', or 'id'
 
-    if (parts[0] && !parts[0].match(/[.#]/)) {
-      tag = parts[0];
+    while (i < def.length) {
+      const char = def[i];
+
+      if (char === '[') {
+        inBracket = true;
+        current += char;
+      } else if (char === ']') {
+        inBracket = false;
+        current += char;
+      } else if (!inBracket && (char === '.' || char === '#')) {
+        // Save current token
+        if (current) {
+          if (mode === 'tag') {
+            tag = current;
+          } else if (mode === 'class') {
+            classes.push(current);
+          } else if (mode === 'id') {
+            id = current;
+          }
+        }
+        // Set new mode
+        mode = char === '.' ? 'class' : 'id';
+        current = '';
+      } else {
+        current += char;
+      }
+      i++;
     }
 
-    for (let i = 1; i < parts.length; i += 2) {
-      const marker = parts[i];
-      const value = parts[i + 1];
-
-      if (marker === '.') {
-        classes.push(value);
-      } else if (marker === '#') {
-        id = value;
+    // Save final token
+    if (current) {
+      if (mode === 'tag') {
+        tag = current;
+      } else if (mode === 'class') {
+        classes.push(current);
+      } else if (mode === 'id') {
+        id = current;
       }
     }
 
@@ -415,8 +468,9 @@ export class Parser {
         }
       }
 
-      // Handle events: @eventName(action) or @nav(/path)
+      // Handle events: @eventName(action), @nav(/path), or @ action (shorthand for click)
       if (content[i] === '@') {
+        // Try named event: @eventName(action)
         const eventMatch = content.substring(i).match(/^@([a-zA-Z]+)\(([^)]*)\)/);
         if (eventMatch) {
           const eventName = eventMatch[1];
@@ -435,6 +489,18 @@ export class Parser {
             });
           }
           i += eventMatch[0].length;
+          continue;
+        }
+
+        // Try shorthand click event: @ action (everything after @ is the action)
+        const shorthandMatch = content.substring(i).match(/^@\s+(.+)$/);
+        if (shorthandMatch) {
+          children.push({
+            type: 'Event',
+            eventName: 'click',
+            action: shorthandMatch[1].trim()
+          });
+          i = content.length; // Consume rest of content
           continue;
         }
       }

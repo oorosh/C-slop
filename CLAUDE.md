@@ -9,7 +9,7 @@ C-slop is a **token-minimal programming language** for web applications that red
 1. **Backend Compiler** (`compiler/`) - Compiles `.slop` files to Node.js/Express
 2. **Frontend Compiler** (`compiler/frontend/`) - Compiles `.ui` component files to vanilla JavaScript with reactive signals
 3. **Documentation Website** (`docs/`) - Docusaurus v3.9.2 site at https://c-slop.dev
-4. **Example App** (`site/`) - Full-stack sample application
+4. **Example App** (`compiler/examples/`) - Full-stack sample application
 
 ## Commands
 
@@ -20,8 +20,9 @@ npm install
 npm link                    # Install 'cslop' command globally
 
 cslop create my-app         # Create a new project
+cslop start                 # Compile frontend + run backend
+cslop watch                 # Start with hot reload (WebSocket-based)
 cslop app.slop              # Run a .slop file (starts Express server on :3000)
-cslop run app.slop          # Same as above
 cslop build app.slop -o out.js  # Compile to JavaScript
 
 npm test                    # Run tests (node test/test.js)
@@ -39,6 +40,7 @@ node cli.js ../examples/components ../examples/public
 ### Documentation Site
 ```bash
 cd docs
+npm install
 npm start                   # Dev server at http://localhost:3000
 npm run build               # Generate static site
 npm run typecheck           # TypeScript type checking
@@ -47,7 +49,7 @@ npm run typecheck           # TypeScript type checking
 ## Architecture
 
 ### Backend Compiler (`compiler/src/`)
-- `cli.js` - CLI entry point, handles `run` and `build` commands
+- `cli.js` - CLI entry point with commands: `create`, `start`, `watch`, `build`, and direct `.slop` execution
 - `compiler.js` - Parser that transforms `.slop` syntax to JavaScript/Express code
 - `runtime.js` - Express.js wrapper with database abstraction (in-memory or SQLite)
 - `index.js` - Module exports
@@ -64,10 +66,18 @@ Configuration via `slop.json`:
 - `cli.js` - CLI entry point
 - `parser.js` - Parses `.ui` component syntax (state, effects, markup, events, loops)
 - `codegen.js` - Generates JavaScript with hyperscript DOM and reactive signals
+- `router-parser.js` - Parses `router.slop` files for client-side routing
+- `router-codegen.js` - Generates router code
 
 ### Runtime (`compiler/runtime/`)
 - `signals.js` (~1.5KB) - Reactive state: `signal()`, `computed()`, `effect()`
 - `dom.js` (~1KB) - Hyperscript helpers: `h()`, `mount()`, `list()`, `navigate()`
+- `router.js` (~1KB) - Client-side SPA router with `$route` signal
+
+### SlopUI (`compiler/slopui/`)
+- `base.css` - CSS reset, theme variables, utility classes
+- `components.css` - Pre-built component styles (buttons, cards, inputs, alerts)
+- `theme.js` - Theme CSS generator from `slop.json` config
 
 ### Documentation (`docs/`)
 - `docusaurus.config.ts` - Site config (dark mode default, blog disabled)
