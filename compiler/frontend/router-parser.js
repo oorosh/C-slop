@@ -19,8 +19,8 @@ export class RouterParser {
     for (const line of this.lines) {
       const trimmed = line.trim();
 
-      // Skip empty lines and comments
-      if (!trimmed || trimmed.startsWith('#')) {
+      // Skip empty lines and comments (// is the standard, # for backwards compatibility)
+      if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('#')) {
         continue;
       }
 

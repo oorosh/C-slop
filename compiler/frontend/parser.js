@@ -8,6 +8,7 @@ export class Parser {
     this.source = source;
     this.lines = source.split('\n');
     this.pos = 0;
+    this.aliases = {};  // Class aliases: &name = .class.combo
     this.ast = {
       type: 'Component',
       imports: [],  // Component imports
@@ -27,7 +28,7 @@ export class Parser {
       while (this.pos < separatorIndex) {
         const line = this.lines[this.pos].trim();
 
-        if (!line || line.startsWith('#')) {
+        if (!line || line.startsWith('//')) {
           this.pos++;
           continue;
         }
@@ -40,6 +41,13 @@ export class Parser {
 
         if (line.startsWith('~')) {
           this.parseEffect(line);
+          this.pos++;
+          continue;
+        }
+
+        // Parse alias definitions: &name = .class.combo
+        if (line.startsWith('&')) {
+          this.parseAlias(line);
           this.pos++;
           continue;
         }
@@ -57,7 +65,7 @@ export class Parser {
       while (this.pos < this.lines.length) {
         const line = this.lines[this.pos].trim();
 
-        if (!line || line.startsWith('#')) {
+        if (!line || line.startsWith('//')) {
           this.pos++;
           continue;
         }
@@ -74,8 +82,15 @@ export class Parser {
           continue;
         }
 
-        // Markup (starts with element, class, or @@Component) - parse all root elements
-        if (line.match(/^[.#@a-zA-Z]/)) {
+        // Parse alias definitions: &name = .class.combo
+        if (line.startsWith('&') && line.includes('=')) {
+          this.parseAlias(line);
+          this.pos++;
+          continue;
+        }
+
+        // Markup (starts with element, class, &alias, or @@Component) - parse all root elements
+        if (line.match(/^[.#@&a-zA-Z]/)) {
           this.ast.markup = this.parseRootElements();
           break;
         }
@@ -87,6 +102,14 @@ export class Parser {
     return this.ast;
   }
 
+  parseAlias(line) {
+    // Parse: &name = .class.combo or &name = tag.class.combo
+    const match = line.match(/^&(\w+)\s*=\s*(.+)$/);
+    if (match) {
+      this.aliases[match[1]] = match[2].trim();
+    }
+  }
+
   parseRootElements() {
     const elements = [];
 
@@ -94,7 +117,7 @@ export class Parser {
       const line = this.lines[this.pos].trim();
 
       // Skip empty lines and comments
-      if (!line || line.startsWith('#')) {
+      if (!line || line.startsWith('//')) {
         this.pos++;
         continue;
       }
@@ -112,6 +135,12 @@ export class Parser {
           path: `./${componentName}.js`
         });
         this.pos++;
+        continue;
+      }
+
+      // Alias usage at root level: &name or &name[content]
+      if (line.match(/^&\w/) && this.getIndent(this.pos) === 0) {
+        elements.push(this.parseMarkup());
         continue;
       }
 
@@ -186,16 +215,32 @@ export class Parser {
     const line = this.lines[this.pos].trim();
     const parentIndent = this.getIndent(this.pos);
 
-    // Parse element definition: tag.class#id or tag.class#id[content]
+    // Parse element definition: tag.class#id, tag.class#id[content], or &alias[content]
     // Extract element def before [ if present
     const bracketIndex = line.indexOf('[');
-    const elementDef = bracketIndex >= 0 ? line.substring(0, bracketIndex) : line;
+    let elementDef = bracketIndex >= 0 ? line.substring(0, bracketIndex) : line;
+
+    // Expand alias if starts with &
+    if (elementDef.startsWith('&')) {
+      const aliasName = elementDef.slice(1);
+      if (this.aliases[aliasName]) {
+        elementDef = this.aliases[aliasName];
+      }
+    }
+
     const element = this.parseElementDef(elementDef);
 
-    // If has bracket, parse inline content
+    // If has bracket, parse inline content (including multi-line code blocks)
     if (bracketIndex >= 0) {
-      const content = line.substring(bracketIndex + 1, line.lastIndexOf(']'));
-      element.children = this.parseInlineContent(content);
+      const contentStart = bracketIndex + 1;
+      const content = line.substring(contentStart, line.lastIndexOf(']'));
+
+      // Check for multi-line code block: [```...```]
+      if (content.startsWith('```')) {
+        element.children = this.parseMultilineBlock(contentStart);
+      } else {
+        element.children = this.parseInlineContent(content);
+      }
     }
 
     // Parse children on next lines
@@ -204,6 +249,65 @@ export class Parser {
     element.children.push(...childElements);
 
     return element;
+  }
+
+  parseMultilineBlock(startPos) {
+    // Handle multi-line code blocks: [```\nline1\nline2\n```]
+    const children = [];
+    const currentLine = this.lines[this.pos];
+    const bracketContent = currentLine.substring(startPos);
+
+    // Check if it's all on one line: [```code```]
+    if (bracketContent.includes('```') && bracketContent.lastIndexOf('```') > 3) {
+      const start = bracketContent.indexOf('```') + 3;
+      const end = bracketContent.lastIndexOf('```');
+      const code = bracketContent.substring(start, end);
+      // Split by newlines or treat as single line
+      const lines = code.split('\\n');
+      for (const line of lines) {
+        if (line.trim()) {
+          children.push({ type: 'Text', value: line, block: true });
+        }
+      }
+      return children;
+    }
+
+    // Multi-line block spans multiple source lines
+    // Find the closing ```]
+    let codeLines = [];
+    let pos = this.pos;
+    let inBlock = true;
+
+    // First line after [```
+    const firstLineContent = bracketContent.substring(3).trim();
+    if (firstLineContent && !firstLineContent.startsWith('```')) {
+      codeLines.push(firstLineContent);
+    }
+
+    pos++;
+    while (pos < this.lines.length && inBlock) {
+      const line = this.lines[pos];
+      if (line.includes('```]') || line.trim() === '```') {
+        // End of block
+        const beforeEnd = line.substring(0, line.indexOf('```')).trim();
+        if (beforeEnd) {
+          codeLines.push(beforeEnd);
+        }
+        inBlock = false;
+        this.pos = pos; // Update position to after the block
+      } else {
+        // Regular code line - preserve content but trim common indent
+        codeLines.push(line.trim());
+        pos++;
+      }
+    }
+
+    // Create text nodes for each line (will render as <p> or <span> elements)
+    for (const codeLine of codeLines) {
+      children.push({ type: 'CodeLine', value: codeLine });
+    }
+
+    return children;
   }
 
   parseElementDef(def) {
@@ -242,12 +346,23 @@ export class Parser {
       while (i < content.length && /\s/.test(content[i])) i++;
       if (i >= content.length) break;
 
-      // Handle quoted strings - these may contain interpolations
+      // Handle quoted strings - these may contain interpolations and escaped quotes
       if (content[i] === '"') {
         const start = i + 1;
         i++;
-        while (i < content.length && content[i] !== '"') i++;
-        const text = content.substring(start, i);
+        let text = '';
+        while (i < content.length) {
+          // Handle escaped quote \"
+          if (content[i] === '\\' && i + 1 < content.length && content[i + 1] === '"') {
+            text += '"';
+            i += 2;
+            continue;
+          }
+          // End of string
+          if (content[i] === '"') break;
+          text += content[i];
+          i++;
+        }
         i++; // Skip closing quote
 
         // Parse interpolations inside the quoted string
@@ -333,8 +448,9 @@ export class Parser {
 
   parseTextWithInterpolations(text) {
     const children = [];
-    // Match @{...} (reactive) and {...} (static) interpolations
-    const regex = /(@\{[^}]+\}|\{[^}]+\})/g;
+    // Match @{...} (reactive interpolation) only
+    // Static {$var} is no longer supported to avoid conflicts with literal braces
+    const regex = /@\{[^}]+\}/g;
     let lastIndex = 0;
     let match;
 
@@ -350,23 +466,13 @@ export class Parser {
         }
       }
 
-      // Parse interpolation
+      // Parse reactive interpolation: @{$name} or @{expr}
       const interpolation = match[0];
-      if (interpolation.startsWith('@{')) {
-        // Reactive interpolation: @{$name}
-        const expr = interpolation.slice(2, -1).trim();
-        children.push({
-          type: 'ReactiveInterpolation',
-          expression: expr
-        });
-      } else {
-        // Static interpolation: {$name}
-        const expr = interpolation.slice(1, -1).trim();
-        children.push({
-          type: 'StaticInterpolation',
-          expression: expr
-        });
-      }
+      const expr = interpolation.slice(2, -1).trim();
+      children.push({
+        type: 'ReactiveInterpolation',
+        expression: expr
+      });
 
       lastIndex = match.index + match[0].length;
     }
@@ -449,7 +555,7 @@ export class Parser {
       const trimmed = line.trim();
 
       // Skip empty or comments
-      if (!trimmed || trimmed.startsWith('#')) {
+      if (!trimmed || trimmed.startsWith('//')) {
         this.pos++;
         continue;
       }
@@ -507,6 +613,12 @@ export class Parser {
           });
         }
         this.pos++;
+        continue;
+      }
+
+      // Alias usage: &name or &name[content]
+      if (trimmed.match(/^&\w/)) {
+        children.push(this.parseMarkup());
         continue;
       }
 

@@ -651,23 +651,23 @@ try {
   console.log('  \x1b[32m✓\x1b[0m slop.json');
 
   // Template: api.slop
-  const apiSlop = `# API Routes
+  const apiSlop = `// API Routes
 
-# Health check
+// Health check
 */api/health > #json({status: "ok"})
 
-# Example: Get all items
+// Example: Get all items
 */api/items > @items > #json
 
-# Example: Create item
+// Example: Create item
 */api/items + @items!$.body > #json
 `;
   fs.writeFileSync(path.join(projectPath, 'api.slop'), apiSlop);
   console.log('  \x1b[32m✓\x1b[0m api.slop');
 
   // Template: router.slop
-  const routerSlop = `# Router Configuration
-# Syntax: /path > @@Component
+  const routerSlop = `// Router Configuration
+// Syntax: /path > @@Component
 
 / > @@Home
 /counter > @@Counter
@@ -676,7 +676,7 @@ try {
   console.log('  \x1b[32m✓\x1b[0m router.slop');
 
   // Template: components/Home.ui
-  const homeUi = `# Home - Landing Page
+  const homeUi = `// Home - Landing Page
 
 <?
 
@@ -691,7 +691,7 @@ try {
   console.log('  \x1b[32m✓\x1b[0m components/Home.ui');
 
   // Template: components/Counter.ui
-  const counterUi = `# Counter - Example Component
+  const counterUi = `// Counter - Example Component
 
 $count:0
 
@@ -815,12 +815,12 @@ cslop build <file>     # Compile .slop to JS
 ### Routes
 
 \`\`\`
-*/ > #json({status:"ok"})              # GET /
-*/users > @users > #json               # GET /users
-*/users/:id > @users[$.id] > #json     # GET /users/:id with param
-*/users + @users!$.body > #json        # POST /users
-*/users/:id ^ @users[$.id]!$.body > #json  # PUT /users/:id
-*/users/:id - @users[$.id]!- > #204    # DELETE /users/:id
+*/ > #json({status:"ok"})              // GET /
+*/users > @users > #json               // GET /users
+*/users/:id > @users[$.id] > #json     // GET /users/:id with param
+*/users + @users!$.body > #json        // POST /users
+*/users/:id ^ @users[$.id]!$.body > #json  // PUT /users/:id
+*/users/:id - @users[$.id]!- > #204    // DELETE /users/:id
 \`\`\`
 
 ### Symbols
@@ -841,33 +841,33 @@ cslop build <file>     # Compile .slop to JS
 ### Request Data (\`$\`)
 
 \`\`\`
-$.id              # URL param :id
-$.body            # Request body (POST/PUT)
-$.query.search    # Query string ?search=...
-$.headers.auth    # Request headers
+$.id              // URL param :id
+$.body            // Request body (POST/PUT)
+$.query.search    // Query string ?search=...
+$.headers.auth    // Request headers
 \`\`\`
 
 ### Database Operations (\`@\`)
 
 \`\`\`
-@users                    # Get all
-@users[123]               # Get by ID
-@users[$.id]              # Get by param
-@users?{active:true}      # Filter
-@users!$.body             # Insert
-@users[$.id]!$.body       # Update
-@users[$.id]!-            # Delete
+@users                    // Get all
+@users[123]               // Get by ID
+@users[$.id]              // Get by param
+@users?{active:true}      // Filter
+@users!$.body             // Insert
+@users[$.id]!$.body       // Update
+@users[$.id]!-            // Delete
 \`\`\`
 
 ### Responses (\`#\`)
 
 \`\`\`
-#json(data)       # JSON response
-#json             # Pipe data as JSON
-#html(content)    # HTML response
-#201              # Status code
-#404              # Not found
-#400("message")   # Status with message
+#json(data)       // JSON response
+#json             // Pipe data as JSON
+#html(content)    // HTML response
+#201              // Status code
+#404              // Not found
+#400("message")   // Status with message
 \`\`\`
 
 ---
@@ -877,57 +877,57 @@ $.headers.auth    # Request headers
 ### File Structure
 
 \`\`\`
-# Comment
+// Comment
 
-$state:0             # State declaration
-$computed := expr    # Computed state
-~ effect             # Side effect
+$state:0             // State declaration
+$computed := expr    // Computed state
+~ effect             // Side effect
 
-<?                   # Template separator
+<?                   // Template separator
 
-div.class#id         # Markup
-  @@ChildComponent   # Use component (auto-imports)
+div.class#id         // Markup (# here is ID selector)
+  @@ChildComponent   // Use component (auto-imports)
 \`\`\`
 
 ### Component References
 
 \`\`\`
-@@Counter            # Use Counter component (auto-imports)
-@@UserList           # Use UserList component (auto-imports)
+@@Counter            // Use Counter component (auto-imports)
+@@UserList           // Use UserList component (auto-imports)
 \`\`\`
 
 ### State
 
 \`\`\`
-$count:0             # Number
-$name:""             # String
-$items:[]            # Array
-$user:{}             # Object
-$active:true         # Boolean
+$count:0             // Number
+$name:""             // String
+$items:[]            // Array
+$user:{}             // Object
+$active:true         // Boolean
 
-$doubled := $count * 2    # Computed (reactive)
+$doubled := $count * 2    // Computed (reactive)
 \`\`\`
 
 ### Effects
 
 \`\`\`
-~ fetch("/api/users") > $users              # Fetch and store
-~ fetch("/api") > $data > $loading:false    # Chain assignments
-~ $condition > doSomething                  # Conditional effect
+~ fetch("/api/users") > $users              // Fetch and store
+~ fetch("/api") > $data > $loading:false    // Chain assignments
+~ $condition > doSomething                  // Conditional effect
 \`\`\`
 
 ### Markup
 
 \`\`\`
-div                      # Element
-.class                   # div with class
-div.foo.bar              # Multiple classes
-div#id                   # With ID
-div.class#id             # Combined
+div                      // Element
+.class                   // div with class
+div.foo.bar              // Multiple classes
+div#id                   // With ID
+div.class#id             // Combined
 
-div["text"]              # With text content
-div["Count: @{$count}"]  # Reactive interpolation
-h1["Hello"]              # Any HTML tag
+div["text"]              // With text content
+div["Count: @{$count}"]  // Reactive interpolation
+h1["Hello"]              // Any HTML tag
 \`\`\`
 
 ### Nesting (indentation-based)
@@ -943,25 +943,25 @@ div.container
 ### Events
 
 \`\`\`
-button["Click" @click($count++)]         # Increment state
-button["Click" @click($count--)]         # Decrement state
-button["Reset" @click($count:0)]         # Assignment
-button["Save" @click(saveData)]          # Call function
-input[@input($text:e.target.value)]      # Input handler
-form[@submit(handleSubmit)]              # Form submit
-div[@mouseenter(show) @mouseleave(hide)] # Multiple events
+button["Click" @click($count++)]         // Increment state
+button["Click" @click($count--)]         // Decrement state
+button["Reset" @click($count:0)]         // Assignment
+button["Save" @click(saveData)]          // Call function
+input[@input($text:e.target.value)]      // Input handler
+form[@submit(handleSubmit)]              // Form submit
+div[@mouseenter(show) @mouseleave(hide)] // Multiple events
 \`\`\`
 
 ### Attributes
 
 \`\`\`
-# Static attribute (quoted string)
+// Static attribute (quoted string)
 img[alt{"Profile picture"}]
 
-# Dynamic attribute (from state)
+// Dynamic attribute (from state)
 img[src{$imageUrl}]
 
-# Mixed static and dynamic
+// Mixed static and dynamic
 img[src{$imageUrl} alt{"User avatar"}]
 a[href{$link} target{"_blank"}]
 div[class{$activeClass} id{"main"}]
@@ -970,7 +970,7 @@ div[class{$activeClass} id{"main"}]
 ### Navigation
 
 \`\`\`
-# @nav sets href and click handler automatically
+// @nav sets href and click handler automatically
 a["Go to Counter" @nav(/counter)]
 a["Home" @nav(/)]
 button["Back" @nav(/)]
@@ -989,26 +989,26 @@ button["Back" @nav(/)]
 ### Loops
 
 \`\`\`
-$users                   # Iterate over array
+$users                   // Iterate over array
   .card
-    h3[:name]            # Access item.name
-    p[:email]            # Access item.email
+    h3[:name]            // Access item.name
+    p[:email]            // Access item.email
 \`\`\`
 
 ### Input Binding
 
 \`\`\`
-input[$name "Enter name"]     # Two-way bind to $name, placeholder text
+input[$name "Enter name"]     // Two-way bind to $name, placeholder text
 input[$email "Email"]
 \`\`\`
 
 ### API Actions in Events
 
 \`\`\`
-# POST and add to array
+// POST and add to array
 button["Add" @click(post:/api/users {name:$name} > $users + clear)]
 
-# DELETE and remove from array
+// DELETE and remove from array
 button["Delete" @click(delete:/api/users/:id > $users - :id)]
 \`\`\`
 
@@ -1017,7 +1017,7 @@ button["Delete" @click(delete:/api/users/:id > $users - :id)]
 ## Routing (router.slop)
 
 \`\`\`
-# Syntax: /path > @@Component
+// Syntax: /path > @@Component
 
 / > @@Home
 /about > @@About
@@ -1026,7 +1026,7 @@ button["Delete" @click(delete:/api/users/:id > $users - :id)]
 
 Access route params in components:
 \`\`\`
-# UserDetail.ui - $route.params.id contains the :id value
+// UserDetail.ui - $route.params.id contains the :id value
 h1["User: @{$route.params.id}"]
 \`\`\`
 
@@ -1130,34 +1130,34 @@ span.badge.badge-success["Success"]
 ### Layout Utilities
 
 \`\`\`
-# Containers
-.container              # Max 1200px centered
-.container-sm           # Max 640px
-.container-md           # Max 768px
+// Containers
+.container              // Max 1200px centered
+.container-sm           // Max 640px
+.container-md           // Max 768px
 
-# Flexbox
-.flex                   # display: flex
-.flex-col               # flex-direction: column
-.items-center           # align-items: center
-.justify-center         # justify-content: center
-.justify-between        # justify-content: space-between
-.gap-2                  # gap: 0.5rem
-.gap-4                  # gap: 1rem
+// Flexbox
+.flex                   // display: flex
+.flex-col               // flex-direction: column
+.items-center           // align-items: center
+.justify-center         // justify-content: center
+.justify-between        // justify-content: space-between
+.gap-2                  // gap: 0.5rem
+.gap-4                  // gap: 1rem
 
-# Spacing
-.p-4                    # padding: 1rem
-.px-4                   # padding-left/right: 1rem
-.py-4                   # padding-top/bottom: 1rem
-.m-4                    # margin: 1rem
-.mt-4                   # margin-top: 1rem
-.mx-auto                # margin-left/right: auto
+// Spacing
+.p-4                    // padding: 1rem
+.px-4                   // padding-left/right: 1rem
+.py-4                   // padding-top/bottom: 1rem
+.m-4                    // margin: 1rem
+.mt-4                   // margin-top: 1rem
+.mx-auto                // margin-left/right: auto
 
-# Text
-.text-center            # text-align: center
-.text-primary           # color: var(--primary)
-.text-secondary         # color: var(--text-secondary)
-.text-sm                # font-size: 0.875rem
-.font-bold              # font-weight: 700
+// Text
+.text-center            // text-align: center
+.text-primary           // color: var(--primary)
+.text-secondary         // color: var(--text-secondary)
+.text-sm                // font-size: 0.875rem
+.font-bold              // font-weight: 700
 \`\`\`
 
 ### Tables
@@ -1229,10 +1229,10 @@ $loading:true
 ### API Routes (api.slop)
 
 \`\`\`
-# Health check
+// Health check
 */ > #json({status:"ok"})
 
-# CRUD for users
+// CRUD for users
 */api/users > @users > #json
 */api/users + @users!$.body > #json
 */api/users/:id - @users[$.id]!- > #json

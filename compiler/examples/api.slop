@@ -1,10 +1,10 @@
-# api.slop - User API with database
+// api.slop - User API with database
 
-# GET all users
+// GET all users
 */api/users > @users > #json
 
-# POST new user
+// POST new user
 */api/users + @users!$.body > #json
 
-# DELETE user by id
+// DELETE user by id
 */api/users/:id - @users[$.id]!- > #json

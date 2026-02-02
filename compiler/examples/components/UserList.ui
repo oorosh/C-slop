@@ -1,11 +1,11 @@
-# UserList.ui - User list with database
+// UserList.ui - User list with database
 
 $users:[]
 $name:""
 $email:""
 $loading:true
 
-# Load users on mount
+// Load users on mount
 ~ fetch("/api/users") > $users > $loading:false
 
 <?

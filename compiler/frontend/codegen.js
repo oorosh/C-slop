@@ -268,7 +268,19 @@ export class CodeGenerator {
 
   generateElement(element, indent = '', inLoop = false) {
     if (element.type === 'Text') {
-      return `"${element.value}"`;
+      // Escape quotes and backslashes for JavaScript string output
+      const escaped = element.value
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"');
+      return `"${escaped}"`;
+    }
+
+    if (element.type === 'CodeLine') {
+      // Code line from multi-line block - render as <p> with the text
+      const escaped = element.value
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"');
+      return `h("p", null, "${escaped}")`;
     }
 
     if (element.type === 'Variable') {
@@ -400,9 +412,11 @@ export class CodeGenerator {
           const expr = value.value.replace(/\$(\w+)/g, '$$$1.value');
           propParts.push(`${key}: ${expr}`);
         } else if (key === 'placeholder' || key === 'type') {
-          propParts.push(`${key}: "${value}"`);
+          const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+          propParts.push(`${key}: "${escaped}"`);
         } else {
-          propParts.push(`${key}: "${value}"`);
+          const escaped = typeof value === 'string' ? value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') : value;
+          propParts.push(`${key}: "${escaped}"`);
         }
       });
     }
