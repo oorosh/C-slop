@@ -50,7 +50,7 @@ my-app/
 ## Backend (.slop files)
 
 ```
-# REST API routes
+// REST API routes
 */api/health > #json({status: "ok"})
 
 */api/users > @users > #json
@@ -78,7 +78,7 @@ my-app/
 ## Frontend (.ui files)
 
 ```
-# Counter.ui - Reactive component
+// Counter.ui - Reactive component
 $count:0
 
 <?
@@ -97,11 +97,12 @@ $count:0
 - **Effects**: `~ fetch("/api") > $data` - Side effects
 - **Events**: `@click($count++)`, `@nav(/path)`
 - **Attributes**: `src{$url}`, `alt{"text"}`
+- **ID Alias**: `&` is used instead of `#` for element IDs (e.g., `div&main` instead of `div#main`)
 
 ## Routing (router.slop)
 
 ```
-# Client-side SPA routing
+// Client-side SPA routing
 / > @@Home
 /counter > @@Counter
 /users/:id > @@UserDetail

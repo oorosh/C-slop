@@ -9,16 +9,16 @@ UI components in C-slop use `.ui` files with a simple, reactive syntax.
 ## File Structure
 
 ```
-# Comment
+// Comment
 
-$state:0             # State declaration
-$computed := expr    # Computed state
-~ effect             # Side effect
+$state:0             // State declaration
+$computed := expr    // Computed state
+~ effect             // Side effect
 
-<?                   # Template separator
+<?                   // Template separator
 
-div.class#id         # Markup
-  @@ChildComponent   # Child component
+div.class&id         // Markup (& is alias for #id)
+  @@ChildComponent   // Child component
 ```
 
 ## State
@@ -26,11 +26,11 @@ div.class#id         # Markup
 ### Reactive State
 
 ```
-$count:0             # Number
-$name:""             # String
-$items:[]            # Array
-$user:{}             # Object
-$active:true         # Boolean
+$count:0             // Number
+$name:""             // String
+$items:[]            // Array
+$user:{}             // Object
+$active:true         // Boolean
 ```
 
 ### Computed State
@@ -48,13 +48,13 @@ $message := "Count is " + $count
 Side effects run on mount and when dependencies change:
 
 ```
-# Fetch data on mount
+// Fetch data on mount
 ~ fetch("/api/users") > $users
 
-# Chain assignments
+// Chain assignments
 ~ fetch("/api/data") > $data > $loading:false
 
-# Conditional effect
+// Conditional effect
 ~ $condition > doSomething
 ```
 
@@ -63,18 +63,18 @@ Side effects run on mount and when dependencies change:
 ### Elements
 
 ```
-div                      # Element
-.container               # div with class
-div.foo.bar              # Multiple classes
-div#main                 # With ID
-div.container#main       # Combined
+div                      // Element
+.container               // div with class
+div.foo.bar              // Multiple classes
+div&main                 // With ID (& is alias for #)
+div.container&main       // Combined
 ```
 
 ### Text Content
 
 ```
 h1["Hello World"]
-p["Count: @{$count}"]    # Reactive interpolation
+p["Count: @{$count}"]    // Reactive interpolation
 span["Static text"]
 ```
 
@@ -93,19 +93,19 @@ div.container
 Vue/React-like event syntax:
 
 ```
-# Click handlers
+// Click handlers
 button["+" @click($count++)]
 button["-" @click($count--)]
 button["Reset" @click($count:0)]
 button["Save" @click(handleSave)]
 
-# Input handlers
+// Input handlers
 input[@input($text:e.target.value)]
 
-# Form submit
+// Form submit
 form[@submit(handleSubmit)]
 
-# Multiple events
+// Multiple events
 div[@mouseenter(show) @mouseleave(hide)]
 ```
 
@@ -205,8 +205,8 @@ Iterate over arrays:
 ```
 $users
   .card
-    h3[:name]            # Access item.name
-    p[:email]            # Access item.email
+    h3[:name]            // Access item.name
+    p[:email]            // Access item.email
 ```
 
 Full example:
@@ -252,7 +252,7 @@ button["Delete" @click(delete:/api/users/:id > $users - :id)]
 
 **Counter.ui:**
 ```
-# Counter component with SlopUI styling
+// Counter component with SlopUI styling
 
 $count:0
 $doubled := $count * 2
@@ -273,7 +273,7 @@ $doubled := $count * 2
 
 **UserList.ui:**
 ```
-# User list with API integration
+// User list with API integration
 
 $users:[]
 $name:""

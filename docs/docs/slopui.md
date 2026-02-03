@@ -281,48 +281,48 @@ nav.navbar
 ### Containers
 
 ```
-.container              # Max 1200px, centered
-.container-sm           # Max 640px
-.container-md           # Max 768px
-.container-lg           # Max 1024px
-.container-xl           # Max 1280px
+.container              // Max 1200px, centered
+.container-sm           // Max 640px
+.container-md           // Max 768px
+.container-lg           // Max 1024px
+.container-xl           // Max 1280px
 ```
 
 ### Flexbox
 
 ```
-.flex                   # display: flex
-.flex-col               # flex-direction: column
-.flex-row               # flex-direction: row
-.flex-wrap              # flex-wrap: wrap
-.items-center           # align-items: center
-.items-start            # align-items: flex-start
-.items-end              # align-items: flex-end
-.justify-center         # justify-content: center
-.justify-between        # justify-content: space-between
-.justify-around         # justify-content: space-around
-.justify-end            # justify-content: flex-end
+.flex                   // display: flex
+.flex-col               // flex-direction: column
+.flex-row               // flex-direction: row
+.flex-wrap              // flex-wrap: wrap
+.items-center           // align-items: center
+.items-start            // align-items: flex-start
+.items-end              // align-items: flex-end
+.justify-center         // justify-content: center
+.justify-between        // justify-content: space-between
+.justify-around         // justify-content: space-around
+.justify-end            // justify-content: flex-end
 ```
 
 ### Gap
 
 ```
-.gap-1    # 0.25rem
-.gap-2    # 0.5rem
-.gap-3    # 0.75rem
-.gap-4    # 1rem
-.gap-6    # 1.5rem
-.gap-8    # 2rem
+.gap-1    // 0.25rem
+.gap-2    // 0.5rem
+.gap-3    // 0.75rem
+.gap-4    // 1rem
+.gap-6    // 1.5rem
+.gap-8    // 2rem
 ```
 
 ### Grid
 
 ```
-.grid                   # display: grid
-.grid-cols-1            # 1 column
-.grid-cols-2            # 2 columns
-.grid-cols-3            # 3 columns
-.grid-cols-4            # 4 columns
+.grid                   // display: grid
+.grid-cols-1            // 1 column
+.grid-cols-2            // 2 columns
+.grid-cols-3            // 3 columns
+.grid-cols-4            // 4 columns
 ```
 
 ## Spacing Utilities
@@ -330,19 +330,19 @@ nav.navbar
 ### Padding
 
 ```
-.p-1 .p-2 .p-3 .p-4 .p-6 .p-8       # All sides
-.px-1 .px-2 .px-3 .px-4 .px-6       # Left & right
-.py-1 .py-2 .py-3 .py-4 .py-6       # Top & bottom
+.p-1 .p-2 .p-3 .p-4 .p-6 .p-8       // All sides
+.px-1 .px-2 .px-3 .px-4 .px-6       // Left & right
+.py-1 .py-2 .py-3 .py-4 .py-6       // Top & bottom
 ```
 
 ### Margin
 
 ```
-.m-1 .m-2 .m-3 .m-4 .m-6 .m-8       # All sides
-.mx-auto                             # Center horizontally
-.my-4 .my-6 .my-8                    # Top & bottom
-.mt-2 .mt-4 .mt-6 .mt-8              # Top only
-.mb-2 .mb-4 .mb-6 .mb-8              # Bottom only
+.m-1 .m-2 .m-3 .m-4 .m-6 .m-8       // All sides
+.mx-auto                             // Center horizontally
+.my-4 .my-6 .my-8                    // Top & bottom
+.mt-2 .mt-4 .mt-6 .mt-8              // Top only
+.mb-2 .mb-4 .mb-6 .mb-8              // Bottom only
 ```
 
 ## Text Utilities
@@ -358,22 +358,22 @@ nav.navbar
 ### Size
 
 ```
-.text-xs     # 0.75rem
-.text-sm     # 0.875rem
-.text-base   # 1rem
-.text-lg     # 1.125rem
-.text-xl     # 1.25rem
-.text-2xl    # 1.5rem
-.text-3xl    # 1.875rem
+.text-xs     // 0.75rem
+.text-sm     // 0.875rem
+.text-base   // 1rem
+.text-lg     // 1.125rem
+.text-xl     // 1.25rem
+.text-2xl    // 1.5rem
+.text-3xl    // 1.875rem
 ```
 
 ### Weight
 
 ```
-.font-normal    # 400
-.font-medium    # 500
-.font-semibold  # 600
-.font-bold      # 700
+.font-normal    // 400
+.font-medium    // 500
+.font-semibold  // 600
+.font-bold      // 700
 ```
 
 ### Color
@@ -390,10 +390,10 @@ nav.navbar
 ## Display Utilities
 
 ```
-.hidden           # display: none
-.block            # display: block
-.inline           # display: inline
-.inline-block     # display: inline-block
+.hidden           // display: none
+.block            // display: block
+.inline           // display: inline
+.inline-block     // display: inline-block
 ```
 
 ## Position Utilities
@@ -408,9 +408,9 @@ nav.navbar
 ## Width/Height
 
 ```
-.w-full           # width: 100%
-.h-full           # height: 100%
-.min-h-screen     # min-height: 100vh
+.w-full           // width: 100%
+.h-full           // height: 100%
+.min-h-screen     // min-height: 100vh
 ```
 
 ## Overflow

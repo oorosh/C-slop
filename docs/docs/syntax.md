@@ -413,12 +413,12 @@ arr.join(sep)    // Join to string
 
 ```
 app/
-  main.slop      # Entry point, routes
-  models.slop    # DB schema (optional)
-  views/         # Template files
+  main.slop      // Entry point, routes
+  models.slop    // DB schema (optional)
+  views/         // Template files
     index.slop
     user.slop
-  lib/           # Shared functions
+  lib/           // Shared functions
     auth.slop
 ```
 

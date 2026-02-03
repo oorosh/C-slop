@@ -35,7 +35,7 @@ A complete todo application with API integration.
 
 **api.slop:**
 ```
-# Todo API
+// Todo API
 */api/todos > @todos > #json
 */api/todos + @todos!$.body > #json
 */api/todos/:id - @todos[$.id]!- > #204
@@ -94,7 +94,7 @@ $loading:true
 .container.py-8
   h1.mb-6["Dashboard"]
 
-  # Stats Cards
+  // Stats Cards
   .grid.grid-cols-3.gap-4.mb-8
     .card.text-center.p-6
       h2.text-3xl.font-bold[@{$stats.totalUsers}]
@@ -106,7 +106,7 @@ $loading:true
       h2.text-3xl.font-bold["$@{$stats.revenue}"]
       p.text-secondary["Revenue"]
 
-  # Recent Users
+  // Recent Users
   .card
     .card-header
       .flex.justify-between.items-center
@@ -198,7 +198,7 @@ $loading:true
         span[@{$post.date}]
       .prose[@{$post.content}]
 
-    # Comments Section
+    // Comments Section
     .mt-8
       h2.text-xl.font-bold.mb-4["Comments (@{$comments.length})"]
 
@@ -337,19 +337,19 @@ A full application with all pieces together:
 
 **api.slop:**
 ```
-# Health check
+// Health check
 */api/health > #json({status:"ok"})
 
-# Products
+// Products
 */api/products > @products > #json
 */api/products/:id > @products[$.id] > #json
 
-# Cart
+// Cart
 */api/cart > @cart > #json
 */api/cart + @cart!$.body > #json
 */api/cart/:id - @cart[$.id]!- > #204
 
-# Users
+// Users
 */api/users > @users > #json
 */api/users + @users!$.body > #json
 ```

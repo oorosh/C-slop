@@ -11,7 +11,7 @@ C-slop includes a built-in client-side router for SPA (Single Page Application) 
 Create a `router.slop` file in your project root:
 
 ```
-# Syntax: /path > @@Component
+// Syntax: /path > @@Component
 
 / > @@Home
 /about > @@About
@@ -83,9 +83,9 @@ Where `submitForm` might call `navigate('/success')` after processing.
 Route parameters are available via the global `$route` signal:
 
 ```
-$route.path        # Current path, e.g., "/users/123"
-$route.params      # Route parameters, e.g., { id: "123" }
-$route.query       # Query string params, e.g., { search: "foo" }
+$route.path        // Current path, e.g., "/users/123"
+$route.params      // Route parameters, e.g., { id: "123" }
+$route.query       // Query string params, e.g., { search: "foo" }
 ```
 
 ### Example: User Detail Page
@@ -122,8 +122,8 @@ $loading:true
 For a URL like `/search?q=hello&page=2`:
 
 ```
-$route.query.q       # "hello"
-$route.query.page    # "2"
+$route.query.q       // "hello"
+$route.query.page    // "2"
 ```
 
 ### Example: Search Page
@@ -246,19 +246,19 @@ The C-slop server automatically serves `index.html` for any non-API, non-file ro
 
 **router.slop:**
 ```
-# Main routes
+// Main routes
 / > @@Home
 /about > @@About
 
-# User routes
+// User routes
 /users > @@UserList
 /users/:id > @@UserDetail
 
-# Auth routes
+// Auth routes
 /login > @@Login
 /register > @@Register
 
-# 404 fallback
+// 404 fallback
 /* > @@NotFound
 ```
 
