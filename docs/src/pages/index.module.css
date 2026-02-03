@@ -10,6 +10,12 @@
   overflow: hidden;
 }
 
+.heroLogo {
+  height: 140px;
+  width: auto;
+  margin-bottom: 1.5rem;
+}
+
 @media screen and (max-width: 996px) {
   .heroBanner {
     padding: 3rem 1rem;

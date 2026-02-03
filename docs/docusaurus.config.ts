@@ -4,8 +4,8 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'C-slop',
-  tagline: 'Write web apps in 80% fewer tokens',
-  favicon: 'img/favicon.ico',
+  tagline: 'Write web apps in 80% fewer tokens with C~slop',
+  favicon: 'img/C-Slop-logo.svg',
 
   future: {
     v4: true,
@@ -47,10 +47,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'C-slop',
       logo: {
         alt: 'C-slop Logo',
-        src: 'img/logo.svg',
+        src: 'img/C-Slop-logo.svg',
       },
       items: [
         {

@@ -79,9 +79,11 @@ function HomepageHeader() {
   return (
     <header className={clsx('hero', styles.heroBanner)}>
       <div className="container">
-        <Heading as="h1" className="hero__title">
-          {siteConfig.title}
-        </Heading>
+        <img
+          src="/img/C-Slop-logo.svg"
+          alt="C-slop Logo"
+          className={styles.heroLogo}
+        />
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
@@ -228,23 +230,20 @@ function CTASection() {
   return (
     <section className={styles.ctaSection}>
       <div className="container">
-        <h2 className={styles.ctaTitle}>Ready to write less code?</h2>
+        <h2 className={styles.ctaTitle}>Help Build the Future</h2>
         <p className={styles.ctaSubtitle}>
-          Get started with C-slop and build your next web app in record time.
+          C-slop is open source and actively developed. Join us in creating the most token-efficient web language.
         </p>
-        <div className={styles.installCommand}>
-          <code>npm install -g cslop</code>
-        </div>
         <div className={styles.buttons}>
           <Link
             className="button button--primary button--lg"
-            to="/docs/intro">
-            Read the Docs
+            href="https://github.com/bigboggy/C-slop">
+            Contribute on GitHub
           </Link>
           <Link
             className="button button--secondary button--lg"
-            href="https://github.com/bigboggy/C-slop">
-            View on GitHub
+            to="/docs/intro">
+            Read the Docs
           </Link>
         </div>
       </div>
