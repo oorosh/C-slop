@@ -138,7 +138,7 @@ function StatsSection() {
           </div>
           <div className={styles.statItem}>
             <div className={styles.statNumber}>0</div>
-            <div className={styles.statLabel}>Boilerplate</div>
+            <div className={styles.statLabel}>Dependencies</div>
           </div>
         </div>
       </div>
