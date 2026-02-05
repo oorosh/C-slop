@@ -4,7 +4,9 @@ description: Token-minimal programming language for full-stack web apps using sy
 license: MIT
 compatibility: opencode
 metadata:
-  author: bigboggy
+  author: Oorosh
+  original-project: C-slop
+  original-author: bigboggy
   repo: https://github.com/bigboggy/C-slop
   website: https://c-slop.dev
 ---
